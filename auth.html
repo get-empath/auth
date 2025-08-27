@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Empath</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
+      background: white;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid #e1e5e9;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      margin: 0 0 8px 0;
+      color: #1a1a1a;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      text-align: center;
+    }
+
+    .plan-info {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .plan-name {
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      color: #667eea;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin: 0px 0px 6px 6px;
+      font-weight: 500;
+      color: #4a5568;
+      font-size: 14px;
+      letter-spacing: -0.4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      box-sizing: border-box;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+      letter-spacing: -0.2px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    button {
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+      min-width: 160px;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .message.error {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .message.success {
+      color: #16a34a;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .message.info {
+      color: #0066cc;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+
+    .tos {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #6c757d;
+      text-align: center;
+    }
+
+    .tos a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .tos a:hover {
+      text-decoration: underline;
+    }
+
+    .progress-indicator {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      display: none;
+    }
+
+    .progress-indicator.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(102, 102, 102, 0.3);
+      border-radius: 50%;
+      border-top-color: #666;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .dots {
+      display: inline-block;
+      margin-left: 4px;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    .dots::after {
+      content: '';
+      animation: dots 2s infinite;
+    }
+
+    .switch-plan {
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .switch-plan a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .switch-plan a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create Your Account</h2>
+
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="first-name">First Name</label>
+        <input type="text" id="first-name" required placeholder="John">
+      </div>
+
+      <div class="form-group">
+        <label for="last-name">Last Name</label>
+        <input type="text" id="last-name" required placeholder="Smith">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="you@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password <span style="color: #6c757d; font-weight: 400;">(minimum 6 characters)</span></label>
+        <input type="password" id="password" required placeholder="••••••••" minlength="6">
+      </div>
+
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" required placeholder="••••••••" minlength="6">
+      </div>
+
+      <div class="buttons">
+        <button type="submit" id="submit-btn">Create Account</button>
+      </div>
+
+      <div class="progress-indicator" id="progress-indicator">
+        <div class="spinner"></div>
+        Creating account...
+      </div>
+
+      <div class="message" id="form-message"></div>
+
+      <div class="tos">
+        By creating an account, you agree to our
+        <a href="https://get-empath.com/terms-of-service" target="_blank">Terms of Service</a>.
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'get-empath.firebaseapp.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+
+    // Enhanced plan configurations
+    const planConfigs = {
+      free: {
+        name: 'Free Plan',
+        price: 'Free forever',
+        fastspringId: null,
+        description: 'Basic features included'
+      },
+      monthly: {
+        name: 'Pro Monthly',
+        price: '$9.99/month',
+        fastspringId: 'empath-monthly',
+        description: 'Full access to all features'
+      },
+      annual: {
+        name: 'Pro Annual',
+        price: '$99.99/year',
+        fastspringId: 'empath-annual',
+        description: 'Save 17% with annual billing'
+      }
+    };
+
+    // Get plan from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedPlan = urlParams.get('plan') || 'monthly';
+    
+    // Validate plan
+    const validPlans = Object.keys(planConfigs);
+    const currentPlan = validPlans.includes(selectedPlan) ? selectedPlan : 'monthly';
+
+    const signupForm = document.getElementById('signup-form');
+    const formMessage = document.getElementById('form-message');
+    const submitBtn = document.getElementById('submit-btn');
+    const progressIndicator = document.getElementById('progress-indicator');
+    const planNameEl = document.getElementById('plan-name');
+    const planPriceEl = document.getElementById('plan-price');
+    const switchPlanLink = document.getElementById('switch-plan-link');
+
+    // Initialize plan display - removed since UI elements are gone
+
+    // Show message helper
+    function showMessage(text, type = 'info') {
+      formMessage.innerHTML = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    // Progress indicator helper
+    function showProgress() {
+      progressIndicator.classList.add('show');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating...';
+    }
+
+    function hideProgress() {
+      progressIndicator.classList.remove('show');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account';
+    }
+
+    // Enhanced signup handler with better error handling
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formMessage.innerHTML = '';
+      
+      const firstName = document.getElementById('first-name').value.trim();
+      const lastName = document.getElementById('last-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+
+      // Basic validation
+      if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters long.', 'error');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match.', 'error');
+        return;
+      }
+
+      showProgress();
+      console.log('Starting signup process for:', email, 'Plan:', currentPlan);
+
+      try {
+        // Step 1: Create Firebase Auth user
+        console.log('Creating Firebase Auth user...');
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        console.log('Firebase Auth user created:', user.uid);
+
+        // Step 2: Create comprehensive user document
+        console.log('Creating Firestore user document...');
+        
+        const userData = {
+          email: user.email,
+          firstName: firstName,
+          lastName: lastName,
+          displayName: `${firstName} ${lastName}`,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          plan: currentPlan,
+          subscriptionStatus: currentPlan === 'free' ? 'free' : 'pending',
+          createdVia: 'web_signup',
+          userAgent: navigator.userAgent.substring(0, 200),
+          // Additional fields for better tracking
+          signupSource: window.location.href,
+          selectedPlan: currentPlan,
+          planConfig: planConfigs[currentPlan]
+        };
+
+        // Use Promise.race to handle Firestore timeout
+        const FIRESTORE_TIMEOUT = 3000;
+        
+        try {
+          await Promise.race([
+            firestore.collection('users').doc(user.uid).set(userData, { merge: true }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Firestore timeout')), FIRESTORE_TIMEOUT)
+            )
+          ]);
+          console.log('Firestore document created successfully');
+        } catch (firestoreError) {
+          console.warn('Firestore write issue (continuing anyway):', firestoreError.message);
+          // Continue with the flow even if Firestore has issues
+        }
+
+        // Step 3: Handle plan-specific flow
+        hideProgress();
+
+        if (currentPlan === 'free') {
+          showMessage('🎉 Account created successfully! Redirecting to download...', 'success');
+          console.log('Free plan - redirecting to download page');
+          
+          setTimeout(() => {
+            window.location.href = 'https://get-empath.com/download';
+          }, 2000);
+          
+        } else {
+          const config = planConfigs[currentPlan];
+          if (config && config.fastspringId) {
+            // Enhanced checkout URL with better parameters
+            const checkoutParams = new URLSearchParams({
+              email: user.email,
+              userId: user.uid,
+              displayName: userData.displayName,
+              plan: currentPlan,
+              source: 'web_signup'
+            });
+            
+            const checkoutUrl = `https://empath.onfastspring.com/popup-${config.fastspringId}?${checkoutParams.toString()}`;
+            
+            showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
+            console.log('Paid plan - redirecting to FastSpring:', checkoutUrl);
+            
+            // Shorter delay for better UX
+            setTimeout(() => {
+              window.location.href = checkoutUrl;
+            }, 1500);
+          } else {
+            console.error('Invalid plan configuration:', currentPlan);
+            showMessage('Plan configuration error. Please try again or contact support.', 'error');
+          }
+        }
+
+      } catch (error) {
+        hideProgress();
+        console.error('Signup error:', error);
+        
+        // Enhanced error handling with more specific messages
+        let errorMessage = 'Account creation failed. Please try again.';
+        
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'This email is already registered. <a href="https://get-empath.com/signin" style="color: #667eea;">Sign in instead</a>';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'Password should be at least 6 characters long.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/operation-not-allowed':
+            errorMessage = 'Account creation is temporarily disabled. Please try again later.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          default:
+            errorMessage = `Account creation failed: ${error.message}`;
+        }
+        
+        showMessage(errorMessage, 'error');
+      }
+    });
+
+    // Initialize the page
+    console.log('Signup page loaded. Plan:', currentPlan, 'Config:', planConfigs[currentPlan]);
+
+    // Focus on first name input for better UX
+    document.getElementById('first-name').focus();
+  </script>
+</body>
+</html>

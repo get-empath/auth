@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test 7 - Monthly Product Only</title>
+  <title>Test 8 - Dynamic Product Switching</title>
   
-  <!-- Exact FastSpring script as provided -->
+  <!-- Your combined checkout script -->
   <script
     id="fsc-api"
     src="https://sbl.onfastspring.com/sbl/1.0.5/fastspring-builder.min.js"
     type="text/javascript"
-    data-storefront="empath.onfastspring.com/embedded-empath-monthly">
+    data-storefront="empath.onfastspring.com/embedded-checkout">
   </script>
 
   <style>
@@ -21,39 +21,80 @@
       margin: 0 auto;
     }
     
-    .test-button {
+    .plan-toggle {
+      display: flex;
+      background: #f8f9fa;
+      border-radius: 50px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #dee2e6;
+      max-width: 400px;
+    }
+
+    .plan-button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #6c757d;
+    }
+
+    .plan-button.active {
       background: #007bff;
       color: white;
-      padding: 12px 24px;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    }
+
+    .plan-button:not(.active):hover {
+      color: #495057;
+      background: rgba(0,123,255,0.1);
+    }
+    
+    .test-controls {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .test-button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
-      margin: 10px 5px;
+      font-size: 14px;
+      margin: 5px;
     }
     
     .test-button:hover {
-      background: #0056b3;
+      background: #218838;
     }
     
     .output {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
+      background: #000;
+      color: #0f0;
+      font-family: monospace;
       padding: 15px;
       border-radius: 4px;
-      height: 200px;
+      height: 250px;
       overflow-y: auto;
       margin: 20px 0;
-      font-family: monospace;
-      font-size: 12px;
+      font-size: 11px;
+      white-space: pre-wrap;
     }
     
     .checkout-area {
       border: 2px solid #007bff;
-      min-height: 500px;
+      min-height: 600px;
       padding: 20px;
-      margin: 20px 0;
-      border-radius: 4px;
+      border-radius: 8px;
       background: #f8f9ff;
       position: relative;
     }
@@ -62,31 +103,49 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       padding: 8px 12px;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 12px;
       border: 1px solid #ddd;
+      max-width: 200px;
     }
   </style>
 </head>
 <body>
-  <h1>Monthly Product Test</h1>
-  <p><strong>Storefront:</strong> empath.onfastspring.com/embedded-empath-monthly</p>
+  <h1>Dynamic Product Switching Test</h1>
+  <p><strong>Storefront:</strong> empath.onfastspring.com/embedded-checkout</p>
 
-  <button class="test-button" onclick="addMonthlyProduct()">Add Monthly Product to Cart</button>
-  <button class="test-button" onclick="inspectCheckout()">Inspect Checkout Container</button>
+  <div class="plan-toggle">
+    <button class="plan-button active" data-plan="monthly" onclick="switchToMonthly()">
+      Monthly Plan
+    </button>
+    <button class="plan-button" data-plan="annual" onclick="switchToAnnual()">
+      Annual Plan
+    </button>
+  </div>
+
+  <div class="test-controls">
+    <h3>Test Controls</h3>
+    <button class="test-button" onclick="initializeCheckout()">Initialize Checkout</button>
+    <button class="test-button" onclick="inspectCart()">Inspect Cart</button>
+    <button class="test-button" onclick="clearCart()">Clear Cart</button>
+    <button class="test-button" onclick="clearLogs()">Clear Logs</button>
+  </div>
 
   <div class="output" id="output"></div>
 
   <div class="checkout-area">
     <div class="status" id="status">Waiting for FastSpring...</div>
     
-    <!-- Exact container as FastSpring documentation specifies -->
+    <!-- FastSpring embedded checkout container -->
     <div id="fsc-embedded-checkout-container"></div>
   </div>
 
   <script>
+    let currentPlan = 'monthly';
+    let isInitialized = false;
+
     function log(message) {
       const timestamp = new Date().toLocaleTimeString();
       const output = document.getElementById('output');
@@ -95,14 +154,18 @@
       console.log(message);
     }
 
+    function clearLogs() {
+      document.getElementById('output').textContent = '';
+    }
+
     function updateStatus(text, color = '#333') {
       const status = document.getElementById('status');
       status.textContent = text;
       status.style.color = color;
     }
 
-    function addMonthlyProduct() {
-      log('Adding monthly product to embedded checkout...');
+    function initializeCheckout() {
+      log('=== Initializing Checkout ===');
       
       if (typeof fastspring === 'undefined' || !fastspring.builder) {
         log('ERROR: FastSpring not available');
@@ -111,33 +174,139 @@
       }
 
       try {
+        log('Adding initial monthly product...');
+        
         fastspring.builder.push({
+          products: [{
+            path: 'empath-monthly',
+            quantity: 1
+          }],
+          paymentRequestId: 'init-' + Date.now()
+        });
+        
+        log('Initial monthly product added');
+        isInitialized = true;
+        updateStatus('Initialized with Monthly', 'green');
+        
+        // Check for changes after delay
+        setTimeout(() => inspectCart(), 2000);
+        
+      } catch (error) {
+        log('ERROR: ' + error.message);
+        updateStatus('Init Error: ' + error.message, 'red');
+      }
+      
+      log('=== End Initialize ===');
+    }
+
+    function switchToMonthly() {
+      if (currentPlan === 'monthly') return;
+      
+      log('=== Switching to Monthly ===');
+      
+      if (!isInitialized) {
+        log('Checkout not initialized, initializing with monthly...');
+        initializeCheckout();
+        return;
+      }
+
+      try {
+        // Remove annual product
+        log('Removing empath-annual from cart...');
+        fastspring.builder.remove('empath-annual');
+        
+        // Add monthly product
+        log('Adding empath-monthly to cart...');
+        fastspring.builder.add({
           products: [{
             path: 'empath-monthly',
             quantity: 1
           }]
         });
         
-        log('Monthly product added successfully');
-        updateStatus('Product Added', 'green');
+        currentPlan = 'monthly';
+        updateButtonStates();
+        updateStatus('Switched to Monthly', 'blue');
+        log('Successfully switched to monthly');
         
-        // Check for container changes after delay
-        setTimeout(() => {
-          inspectCheckout();
-        }, 3000);
+        setTimeout(() => inspectCart(), 1000);
         
       } catch (error) {
-        log('ERROR: ' + error.message);
-        updateStatus('Error: ' + error.message, 'red');
+        log('ERROR switching to monthly: ' + error.message);
+        updateStatus('Switch Error', 'red');
       }
+      
+      log('=== End Switch to Monthly ===');
     }
 
-    function inspectCheckout() {
-      const container = document.getElementById('fsc-embedded-checkout-container');
+    function switchToAnnual() {
+      if (currentPlan === 'annual') return;
       
-      log('=== Container Inspection ===');
-      log('HTML length: ' + container.innerHTML.length);
-      log('Children count: ' + container.children.length);
+      log('=== Switching to Annual ===');
+      
+      if (!isInitialized) {
+        log('Checkout not initialized, initializing with annual...');
+        try {
+          fastspring.builder.push({
+            products: [{
+              path: 'empath-annual',
+              quantity: 1
+            }],
+            paymentRequestId: 'init-annual-' + Date.now()
+          });
+          isInitialized = true;
+          currentPlan = 'annual';
+          updateButtonStates();
+          updateStatus('Initialized with Annual', 'green');
+          setTimeout(() => inspectCart(), 2000);
+          return;
+        } catch (error) {
+          log('ERROR initializing with annual: ' + error.message);
+          return;
+        }
+      }
+
+      try {
+        // Remove monthly product
+        log('Removing empath-monthly from cart...');
+        fastspring.builder.remove('empath-monthly');
+        
+        // Add annual product
+        log('Adding empath-annual to cart...');
+        fastspring.builder.add({
+          products: [{
+            path: 'empath-annual',
+            quantity: 1
+          }]
+        });
+        
+        currentPlan = 'annual';
+        updateButtonStates();
+        updateStatus('Switched to Annual', 'blue');
+        log('Successfully switched to annual');
+        
+        setTimeout(() => inspectCart(), 1000);
+        
+      } catch (error) {
+        log('ERROR switching to annual: ' + error.message);
+        updateStatus('Switch Error', 'red');
+      }
+      
+      log('=== End Switch to Annual ===');
+    }
+
+    function updateButtonStates() {
+      document.querySelectorAll('.plan-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.plan === currentPlan);
+      });
+    }
+
+    function inspectCart() {
+      log('=== Cart Inspection ===');
+      
+      const container = document.getElementById('fsc-embedded-checkout-container');
+      log('Container HTML length: ' + container.innerHTML.length);
+      log('Container children: ' + container.children.length);
       
       const iframes = container.querySelectorAll('iframe');
       log('iframes: ' + iframes.length);
@@ -152,23 +321,38 @@
         log('Container is empty');
         updateStatus('Container Empty', 'orange');
       } else {
-        log('Container has content');
-        updateStatus('Container Active', 'green');
-        
-        // Show first 100 characters
-        log('Content preview: ' + container.innerHTML.substring(0, 100));
+        log('Container active');
+        updateStatus(`Container Active (${currentPlan})`, 'green');
       }
       
       log('=== End Inspection ===');
+    }
+
+    function clearCart() {
+      log('=== Clearing Cart ===');
+      
+      try {
+        if (typeof fastspring !== 'undefined' && fastspring.builder) {
+          fastspring.builder.reset();
+          log('Cart reset called');
+          isInitialized = false;
+          updateStatus('Cart Cleared', 'orange');
+          
+          setTimeout(() => inspectCart(), 1000);
+        }
+      } catch (error) {
+        log('ERROR clearing cart: ' + error.message);
+      }
+      
+      log('=== End Clear ===');
     }
 
     // Monitor container changes
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.target.id === 'fsc-embedded-checkout-container') {
-          log('Container content changed!');
-          updateStatus('Content Updated', 'blue');
-          setTimeout(() => inspectCheckout(), 500);
+          log('Container content changed');
+          setTimeout(() => inspectCart(), 500);
         }
       });
     });
@@ -176,11 +360,23 @@
     // Listen for FastSpring messages
     window.addEventListener('message', function(event) {
       if (event.origin.includes('fastspring') || event.origin.includes('onfastspring')) {
-        log('FastSpring message: ' + JSON.stringify(event.data));
+        const data = event.data;
+        if (data.fscPopupMessage) {
+          const msg = data.fscPopupMessage;
+          if (msg.action === 'event' && msg.eventData) {
+            const products = msg.eventData.ecommerce?.checkout?.products || 
+                           msg.eventData.ecommerce?.impressions || [];
+            if (products.length > 0) {
+              log(`FastSpring products: ${products.map(p => p.name + ' (' + p.id + ')').join(', ')}`);
+            }
+          } else if (msg.action === 'resizeInlineContainer') {
+            log(`FastSpring resize: ${msg.height}px`);
+          }
+        }
       }
     });
 
-    // Initialize
+    // Initialize when page loads
     window.addEventListener('load', function() {
       const container = document.getElementById('fsc-embedded-checkout-container');
       if (container) {
@@ -191,21 +387,18 @@
         });
       }
       
-      // Check if FastSpring loaded
       setTimeout(() => {
         if (typeof fastspring !== 'undefined' && fastspring.builder) {
-          log('FastSpring ready');
+          log('FastSpring ready for dynamic switching');
           updateStatus('FastSpring Ready', 'green');
-          
-          // Auto-inspect initial state
-          inspectCheckout();
         } else {
           log('FastSpring not loaded');
           updateStatus('FastSpring Failed', 'red');
         }
       }, 2000);
       
-      log('Test initialized');
+      log('Dynamic switching test initialized');
+      log('Click "Initialize Checkout" to start, then use plan toggle buttons');
     });
   </script>
 </body>

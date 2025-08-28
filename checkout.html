@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complete Your Purchase - Empath</title>
-
-  <!-- FastSpring Script - Single script in head -->
+  <title>Test 2 - Embedded Checkout</title>
+  
+  <!-- FastSpring Embedded Script -->
   <script
     id="fsc-api"
     src="https://sbl.onfastspring.com/sbl/1.0.5/fastspring-builder.min.js"
@@ -14,334 +14,274 @@
   </script>
 
   <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
-      background: white;
-      margin: 0;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .container {
-      background: white;
+      font-family: Arial, sans-serif;
       padding: 40px;
-      border-radius: 12px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
     }
-
-    h2 {
-      margin: 0 0 24px 0;
-      color: #1a1a1a;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
-      text-align: center;
-    }
-
-    .plan-toggle {
-      display: flex;
-      background: #f8f9fa;
-      border-radius: 50px;
-      padding: 4px;
-      margin-bottom: 32px;
-      border: 1px solid #e9ecef;
-    }
-
-    .plan-button {
-      flex: 1;
+    
+    .test-button {
+      background: #28a745;
+      color: white;
       padding: 12px 24px;
       border: none;
-      background: transparent;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 600;
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      color: #6c757d;
-      text-align: center;
-    }
-
-    .plan-button.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-    }
-
-    .plan-button:not(.active):hover {
-      color: #495057;
-      background: rgba(102, 126, 234, 0.1);
-    }
-
-    .checkout-wrapper {
-      position: relative;
-      min-height: 600px;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #e9ecef;
-    }
-
-    .checkout-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      opacity: 0;
-      transition: opacity 0.4s ease-in-out;
-      pointer-events: none;
-    }
-
-    .checkout-container.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .loading-state {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-      color: #6c757d;
-      font-size: 14px;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(102, 126, 234, 0.3);
-      border-radius: 50%;
-      border-top-color: #667eea;
-      animation: spin 1s linear infinite;
-      margin-right: 12px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .plan-details {
-      text-align: center;
-      margin-bottom: 24px;
-      padding: 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-
-    .plan-name {
-      font-weight: 600;
-      color: #495057;
       font-size: 16px;
-      margin-bottom: 4px;
+      margin: 10px 0;
     }
-
-    .plan-price {
-      color: #667eea;
-      font-size: 18px;
-      font-weight: 700;
+    
+    .test-button:hover {
+      background: #218838;
     }
-
-    .plan-savings {
-      color: #16a34a;
+    
+    .log-container {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      font-family: monospace;
       font-size: 12px;
-      font-weight: 500;
-      margin-top: 4px;
     }
-
-    .back-link {
+    
+    .log-success { color: #28a745; }
+    .log-error { color: #dc3545; }
+    .log-info { color: #007bff; }
+    .log-warning { color: #ffc107; }
+    
+    .checkout-container {
+      border: 2px dashed #ddd;
+      min-height: 400px;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+      background: #fafafa;
+    }
+    
+    .container-status {
       text-align: center;
-      margin-top: 24px;
-    }
-
-    .back-link a {
-      color: #667eea;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .back-link a:hover {
-      text-decoration: underline;
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .container {
-        margin: 0 12px;
-        padding: 24px;
-      }
-      
-      .checkout-wrapper {
-        min-height: 500px;
-      }
+      color: #666;
+      font-style: italic;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Complete Your Purchase</h2>
+  <h1>Test 2: FastSpring Embedded Checkout</h1>
+  <p><strong>Testing:</strong> empath.onfastspring.com/embedded-empath-monthly</p>
 
-    <div class="plan-toggle">
-      <button class="plan-button active" data-plan="monthly" onclick="switchPlan('monthly')">
-        Monthly
-      </button>
-      <button class="plan-button" data-plan="annual" onclick="switchPlan('annual')">
-        Annual
-      </button>
-    </div>
+  <button class="test-button" onclick="testFastSpringAPI()">
+    Test FastSpring API
+  </button>
 
-    <div class="plan-details" id="plan-details">
-      <div class="plan-name" id="plan-name">Pro Monthly</div>
-      <div class="plan-price" id="plan-price">$9.99/month</div>
-      <div class="plan-savings" id="plan-savings" style="display: none;"></div>
-    </div>
+  <button class="test-button" onclick="inspectContainer()">
+    Inspect Container
+  </button>
 
-    <div class="back-link">
-      <a href="/signup" onclick="history.back(); return false;">← Back to signup</a>
-    </div>
+  <button class="test-button" onclick="clearLogs()">
+    Clear Logs
+  </button>
+
+  <div class="log-container" id="log-container">
+    <div class="log-entry log-info">Test started - waiting for FastSpring to load...</div>
   </div>
 
-  <div class="checkout-wrapper">
-    <div class="loading-state" id="loading-state">
-      <div class="spinner"></div>
-      Loading checkout...
+  <h3>Embedded Checkout Container:</h3>
+  <div class="checkout-container">
+    <div class="container-status" id="container-status">
+      Waiting for FastSpring to initialize...
     </div>
+    
     <!-- FastSpring embedded checkout container -->
     <div id="fsc-embedded-checkout-container"></div>
   </div>
 
   <script>
-    let currentPlan = 'monthly';
+    let logCount = 0;
 
-    const planConfig = {
-      monthly: {
-        name: 'Pro Monthly',
-        price: '$9.99/month',
-        savings: null,
-        storefront: 'empath.onfastspring.com/embedded-empath-monthly'
-      },
-      annual: {
-        name: 'Pro Annual', 
-        price: '$99.99/year',
-        savings: 'Save 17% compared to monthly',
-        storefront: 'empath.onfastspring.com/embedded-empath-annual'
-      }
-    };
-
-    function updatePlanDetails(plan) {
-      const config = planConfig[plan];
-      document.getElementById('plan-name').textContent = config.name;
-      document.getElementById('plan-price').textContent = config.price;
+    function log(message, type = 'info') {
+      logCount++;
+      const timestamp = new Date().toLocaleTimeString();
+      const logContainer = document.getElementById('log-container');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      logEntry.innerHTML = `[${timestamp}] ${message}`;
+      logContainer.appendChild(logEntry);
+      logContainer.scrollTop = logContainer.scrollHeight;
       
-      const savingsEl = document.getElementById('plan-savings');
-      if (config.savings) {
-        savingsEl.textContent = config.savings;
-        savingsEl.style.display = 'block';
-      } else {
-        savingsEl.style.display = 'none';
-      }
+      // Also log to console
+      console.log(`[FastSpring Test] ${message}`);
     }
 
-    function switchPlan(plan) {
-      if (currentPlan === plan) return;
+    function clearLogs() {
+      document.getElementById('log-container').innerHTML = '';
+      logCount = 0;
+    }
 
-      // Update button states
-      document.querySelectorAll('.plan-button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.plan === plan);
-      });
-
-      // Update plan details
-      updatePlanDetails(plan);
-      currentPlan = plan;
-
-      // Show loading state
-      document.getElementById('loading-state').style.display = 'flex';
+    function inspectContainer() {
+      log('Inspecting embedded checkout container...', 'info');
+      
       const container = document.getElementById('fsc-embedded-checkout-container');
-      container.innerHTML = '';
-
-      // Update FastSpring storefront
-      const script = document.getElementById('fsc-api');
-      script.setAttribute('data-storefront', planConfig[plan].storefront);
-
-      // Reload FastSpring with new storefront
-      if (window.fastspring && window.fastspring.builder) {
-        window.fastspring.builder.reload();
+      if (container) {
+        log('✅ Container element found', 'success');
+        log(`   Container ID: ${container.id}`, 'info');
+        log(`   Container innerHTML length: ${container.innerHTML.length}`, 'info');
+        log(`   Container children count: ${container.children.length}`, 'info');
+        
+        if (container.innerHTML.trim() === '') {
+          log('⚠️ Container is empty', 'warning');
+          document.getElementById('container-status').textContent = 'Container is empty - FastSpring not loaded';
+        } else {
+          log('✅ Container has content', 'success');
+          log(`   First 100 chars: ${container.innerHTML.substring(0, 100)}`, 'info');
+          document.getElementById('container-status').textContent = 'Container has content';
+        }
+        
+        // Check for iframes (FastSpring typically uses iframes)
+        const iframes = container.querySelectorAll('iframe');
+        log(`   iframes found: ${iframes.length}`, 'info');
+        
+        iframes.forEach((iframe, index) => {
+          log(`   iframe ${index + 1}: ${iframe.src}`, 'info');
+        });
+        
+      } else {
+        log('❌ Container element not found!', 'error');
       }
-
-      // Hide loading after delay
-      setTimeout(() => {
-        document.getElementById('loading-state').style.display = 'none';
-      }, 2000);
     }
 
-    // Get plan from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlPlan = urlParams.get('plan');
-    if (urlPlan && planConfig[urlPlan]) {
-      currentPlan = urlPlan;
-      // Update the script's data-storefront before page loads
-      document.addEventListener('DOMContentLoaded', () => {
-        const script = document.getElementById('fsc-api');
-        script.setAttribute('data-storefront', planConfig[currentPlan].storefront);
-      });
-    }
-
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', () => {
-      updatePlanDetails(currentPlan);
+    function testFastSpringAPI() {
+      log('Testing FastSpring API availability...', 'info');
       
-      // Set initial plan button state
-      document.querySelectorAll('.plan-button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.plan === currentPlan);
-      });
-
-      // Hide loading state after FastSpring loads
-      setTimeout(() => {
-        document.getElementById('loading-state').style.display = 'none';
-      }, 3000);
-    });
-
-    // Pass user data to FastSpring when available
-    window.addEventListener('load', () => {
-      const email = urlParams.get('email');
-      const userId = urlParams.get('userId');
-      const displayName = urlParams.get('displayName');
-
-      if (email && typeof fastspring !== 'undefined') {
-        setTimeout(() => {
-          try {
-            fastspring.builder.recognize({
-              email: email,
-              tags: {
-                userId: userId,
-                displayName: displayName,
-                plan: currentPlan,
-                source: 'web_checkout'
-              }
-            });
-          } catch (error) {
-            console.log('FastSpring recognize error:', error);
-          }
-        }, 2000);
+      // Test if FastSpring object exists
+      if (typeof fastspring === 'undefined') {
+        log('❌ FastSpring object is undefined', 'error');
+        document.getElementById('container-status').textContent = 'FastSpring object not found';
+      } else {
+        log('✅ FastSpring object found', 'success');
+        
+        if (fastspring.builder) {
+          log('✅ FastSpring builder available', 'success');
+          
+          // Test builder methods
+          const builderMethods = ['push', 'recognize', 'contact', 'reset', 'reload'];
+          builderMethods.forEach(method => {
+            if (typeof fastspring.builder[method] === 'function') {
+              log(`✅ FastSpring.builder.${method}() available`, 'success');
+            } else {
+              log(`❌ FastSpring.builder.${method}() not available`, 'error');
+            }
+          });
+        } else {
+          log('❌ FastSpring builder not available', 'error');
+        }
       }
-    });
+
+      // Test script element
+      const scriptEl = document.getElementById('fsc-api');
+      if (scriptEl) {
+        log('✅ FastSpring script element found', 'success');
+        log(`   Storefront: ${scriptEl.getAttribute('data-storefront')}`, 'info');
+        log(`   Script src: ${scriptEl.src}`, 'info');
+      } else {
+        log('❌ FastSpring script element not found', 'error');
+      }
+      
+      // Inspect container after API test
+      setTimeout(() => {
+        inspectContainer();
+      }, 1000);
+    }
+
+    // Listen for FastSpring script load
+    const scriptEl = document.getElementById('fsc-api');
+    if (scriptEl) {
+      scriptEl.onload = function() {
+        log('✅ FastSpring script loaded successfully', 'success');
+        document.getElementById('container-status').textContent = 'FastSpring script loaded - initializing...';
+        
+        setTimeout(() => {
+          testFastSpringAPI();
+        }, 1000);
+        
+        // Check container periodically
+        const checkInterval = setInterval(() => {
+          const container = document.getElementById('fsc-embedded-checkout-container');
+          if (container && container.innerHTML.trim() !== '') {
+            log('✅ Embedded checkout content detected!', 'success');
+            document.getElementById('container-status').textContent = 'Embedded checkout loaded successfully!';
+            clearInterval(checkInterval);
+          }
+        }, 1000);
+        
+        // Stop checking after 30 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          if (document.getElementById('fsc-embedded-checkout-container').innerHTML.trim() === '') {
+            log('⚠️ Embedded checkout did not load after 30 seconds', 'warning');
+            document.getElementById('container-status').textContent = 'Embedded checkout failed to load';
+          }
+        }, 30000);
+      };
+      
+      scriptEl.onerror = function() {
+        log('❌ FastSpring script failed to load', 'error');
+        document.getElementById('container-status').textContent = 'FastSpring script failed to load';
+      };
+    }
 
     // Listen for FastSpring events
-    window.addEventListener('message', (event) => {
-      if (event.origin.includes('fastspring')) {
-        console.log('FastSpring event:', event.data);
+    window.addEventListener('message', function(event) {
+      if (event.origin.includes('fastspring') || event.origin.includes('onfastspring')) {
+        log(`FastSpring event: ${JSON.stringify(event.data)}`, 'success');
         
-        if (event.data.type === 'order.completed') {
-          // Redirect to success page or app download
-          window.location.href = 'https://get-empath.com/download';
+        if (event.data.type === 'checkout.loaded') {
+          log('✅ FastSpring checkout loaded successfully', 'success');
+          document.getElementById('container-status').textContent = 'Checkout loaded successfully!';
+        } else if (event.data.type === 'order.completed') {
+          log('🎉 Order completed successfully!', 'success');
         }
       }
     });
+
+    // Monitor DOM changes to the container
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.target.id === 'fsc-embedded-checkout-container') {
+          log('🔄 Container content changed', 'info');
+          inspectContainer();
+        }
+      });
+    });
+
+    // Start observing
+    const container = document.getElementById('fsc-embedded-checkout-container');
+    if (container) {
+      observer.observe(container, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
+
+    // Page load test
+    window.addEventListener('load', function() {
+      log('Page loaded - testing FastSpring in 2 seconds...', 'info');
+      setTimeout(() => {
+        testFastSpringAPI();
+      }, 2000);
+    });
+
+    // Initial log
+    log('FastSpring Embedded Test initialized', 'info');
   </script>
 </body>
 </html>

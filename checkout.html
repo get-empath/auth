@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Purchase - Empath</title>
+
+  <!-- FastSpring Script - Single script in head -->
+  <script
+    id="fsc-api"
+    src="https://sbl.onfastspring.com/sbl/1.0.5/fastspring-builder.min.js"
+    type="text/javascript"
+    data-storefront="empath.onfastspring.com/embedded-empath-monthly">
+  </script>
+
+  <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
+      background: white;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      border: 1px solid #e1e5e9;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      margin: 0 0 24px 0;
+      color: #1a1a1a;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      text-align: center;
+    }
+
+    .plan-toggle {
+      display: flex;
+      background: #f8f9fa;
+      border-radius: 50px;
+      padding: 4px;
+      margin-bottom: 32px;
+      border: 1px solid #e9ecef;
+    }
+
+    .plan-button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #6c757d;
+      text-align: center;
+    }
+
+    .plan-button.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    }
+
+    .plan-button:not(.active):hover {
+      color: #495057;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .checkout-wrapper {
+      position: relative;
+      min-height: 600px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e9ecef;
+    }
+
+    .checkout-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+      pointer-events: none;
+    }
+
+    .checkout-container.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      border-radius: 50%;
+      border-top-color: #667eea;
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .plan-details {
+      text-align: center;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .plan-name {
+      font-weight: 600;
+      color: #495057;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      color: #667eea;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .plan-savings {
+      color: #16a34a;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .back-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        margin: 0 12px;
+        padding: 24px;
+      }
+      
+      .checkout-wrapper {
+        min-height: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Complete Your Purchase</h2>
+
+    <div class="plan-toggle">
+      <button class="plan-button active" data-plan="monthly" onclick="switchPlan('monthly')">
+        Monthly
+      </button>
+      <button class="plan-button" data-plan="annual" onclick="switchPlan('annual')">
+        Annual
+      </button>
+    </div>
+
+    <div class="plan-details" id="plan-details">
+      <div class="plan-name" id="plan-name">Pro Monthly</div>
+      <div class="plan-price" id="plan-price">$9.99/month</div>
+      <div class="plan-savings" id="plan-savings" style="display: none;"></div>
+    </div>
+
+    <div class="back-link">
+      <a href="/signup" onclick="history.back(); return false;">← Back to signup</a>
+    </div>
+  </div>
+
+  <div class="checkout-wrapper">
+    <div class="loading-state" id="loading-state">
+      <div class="spinner"></div>
+      Loading checkout...
+    </div>
+    <!-- FastSpring embedded checkout container -->
+    <div id="fsc-embedded-checkout-container"></div>
+  </div>
+
+  <script>
+    let currentPlan = 'monthly';
+
+    const planConfig = {
+      monthly: {
+        name: 'Pro Monthly',
+        price: '$9.99/month',
+        savings: null,
+        storefront: 'empath.onfastspring.com/embedded-empath-monthly'
+      },
+      annual: {
+        name: 'Pro Annual', 
+        price: '$99.99/year',
+        savings: 'Save 17% compared to monthly',
+        storefront: 'empath.onfastspring.com/embedded-empath-annual'
+      }
+    };
+
+    function updatePlanDetails(plan) {
+      const config = planConfig[plan];
+      document.getElementById('plan-name').textContent = config.name;
+      document.getElementById('plan-price').textContent = config.price;
+      
+      const savingsEl = document.getElementById('plan-savings');
+      if (config.savings) {
+        savingsEl.textContent = config.savings;
+        savingsEl.style.display = 'block';
+      } else {
+        savingsEl.style.display = 'none';
+      }
+    }
+
+    function switchPlan(plan) {
+      if (currentPlan === plan) return;
+
+      // Update button states
+      document.querySelectorAll('.plan-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.plan === plan);
+      });
+
+      // Update plan details
+      updatePlanDetails(plan);
+      currentPlan = plan;
+
+      // Show loading state
+      document.getElementById('loading-state').style.display = 'flex';
+      const container = document.getElementById('fsc-embedded-checkout-container');
+      container.innerHTML = '';
+
+      // Update FastSpring storefront
+      const script = document.getElementById('fsc-api');
+      script.setAttribute('data-storefront', planConfig[plan].storefront);
+
+      // Reload FastSpring with new storefront
+      if (window.fastspring && window.fastspring.builder) {
+        window.fastspring.builder.reload();
+      }
+
+      // Hide loading after delay
+      setTimeout(() => {
+        document.getElementById('loading-state').style.display = 'none';
+      }, 2000);
+    }
+
+    // Get plan from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPlan = urlParams.get('plan');
+    if (urlPlan && planConfig[urlPlan]) {
+      currentPlan = urlPlan;
+      // Update the script's data-storefront before page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        const script = document.getElementById('fsc-api');
+        script.setAttribute('data-storefront', planConfig[currentPlan].storefront);
+      });
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      updatePlanDetails(currentPlan);
+      
+      // Set initial plan button state
+      document.querySelectorAll('.plan-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.plan === currentPlan);
+      });
+
+      // Hide loading state after FastSpring loads
+      setTimeout(() => {
+        document.getElementById('loading-state').style.display = 'none';
+      }, 3000);
+    });
+
+    // Pass user data to FastSpring when available
+    window.addEventListener('load', () => {
+      const email = urlParams.get('email');
+      const userId = urlParams.get('userId');
+      const displayName = urlParams.get('displayName');
+
+      if (email && typeof fastspring !== 'undefined') {
+        setTimeout(() => {
+          try {
+            fastspring.builder.recognize({
+              email: email,
+              tags: {
+                userId: userId,
+                displayName: displayName,
+                plan: currentPlan,
+                source: 'web_checkout'
+              }
+            });
+          } catch (error) {
+            console.log('FastSpring recognize error:', error);
+          }
+        }, 2000);
+      }
+    });
+
+    // Listen for FastSpring events
+    window.addEventListener('message', (event) => {
+      if (event.origin.includes('fastspring')) {
+        console.log('FastSpring event:', event.data);
+        
+        if (event.data.type === 'order.completed') {
+          // Redirect to success page or app download
+          window.location.href = 'https://get-empath.com/download';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

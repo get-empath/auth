@@ -212,29 +212,38 @@
       }
 
       try {
-        // Remove annual product
-        log('Removing empath-annual from cart...');
-        fastspring.builder.remove('empath-annual');
+        // Step 1: Clear cart completely
+        log('Step 1: Clearing cart...');
+        fastspring.builder.reset();
         
-        // Add monthly product
-        log('Adding empath-monthly to cart...');
-        fastspring.builder.add({
-          products: [{
-            path: 'empath-monthly',
-            quantity: 1
-          }]
-        });
+        // Step 2: Wait then add monthly product
+        setTimeout(() => {
+          try {
+            log('Step 2: Adding empath-monthly to cart...');
+            fastspring.builder.push({
+              products: [{
+                path: 'empath-monthly',
+                quantity: 1
+              }],
+              paymentRequestId: 'switch-monthly-' + Date.now()
+            });
+            
+            currentPlan = 'monthly';
+            updateButtonStates();
+            updateStatus('Switched to Monthly', 'blue');
+            log('Successfully switched to monthly');
+            
+            setTimeout(() => inspectCart(), 2000);
+            
+          } catch (addError) {
+            log('ERROR adding monthly product: ' + addError.message);
+            updateStatus('Add Monthly Failed', 'red');
+          }
+        }, 1000); // 1 second delay
         
-        currentPlan = 'monthly';
-        updateButtonStates();
-        updateStatus('Switched to Monthly', 'blue');
-        log('Successfully switched to monthly');
-        
-        setTimeout(() => inspectCart(), 1000);
-        
-      } catch (error) {
-        log('ERROR switching to monthly: ' + error.message);
-        updateStatus('Switch Error', 'red');
+      } catch (resetError) {
+        log('ERROR clearing cart: ' + resetError.message);
+        updateStatus('Clear Cart Failed', 'red');
       }
       
       log('=== End Switch to Monthly ===');
@@ -270,43 +279,38 @@
       }
 
       try {
-        // Step 1: Remove monthly product
-        log('Step 1: Removing empath-monthly from cart...');
-        fastspring.builder.remove('empath-monthly');
-        log('Monthly product removal called (no error thrown)');
+        // Step 1: Clear cart completely
+        log('Step 1: Clearing cart...');
+        fastspring.builder.reset();
         
-        // Wait a moment, then add annual
+        // Step 2: Wait then add annual product
         setTimeout(() => {
           try {
-            // Step 2: Add annual product
             log('Step 2: Adding empath-annual to cart...');
-            fastspring.builder.add({
+            fastspring.builder.push({
               products: [{
                 path: 'empath-annual',
                 quantity: 1
-              }]
+              }],
+              paymentRequestId: 'switch-annual-' + Date.now()
             });
             
-            log('Annual product addition called (no error thrown)');
             currentPlan = 'annual';
             updateButtonStates();
             updateStatus('Switched to Annual', 'blue');
+            log('Successfully switched to annual');
             
-            // Check cart after both operations
-            setTimeout(() => {
-              log('Checking cart after annual switch...');
-              inspectCart();
-            }, 1000);
+            setTimeout(() => inspectCart(), 2000);
             
           } catch (addError) {
             log('ERROR adding annual product: ' + addError.message);
             updateStatus('Add Annual Failed', 'red');
           }
-        }, 500);
+        }, 1000); // 1 second delay
         
-      } catch (removeError) {
-        log('ERROR removing monthly product: ' + removeError.message);
-        updateStatus('Remove Monthly Failed', 'red');
+      } catch (resetError) {
+        log('ERROR clearing cart: ' + resetError.message);
+        updateStatus('Clear Cart Failed', 'red');
       }
       
       log('=== End Switch to Annual ===');

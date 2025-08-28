@@ -128,6 +128,7 @@
   <div class="test-controls">
     <h3>Test Controls</h3>
     <button class="test-button" onclick="initializeCheckout()">Initialize Checkout</button>
+    <button class="test-button" onclick="testAnnualOnly()">Test Annual Product Only</button>
     <button class="test-button" onclick="inspectCart()">Inspect Cart</button>
     <button class="test-button" onclick="clearCart()">Clear Cart</button>
     <button class="test-button" onclick="clearLogs()">Clear Logs</button>
@@ -344,7 +345,50 @@
       log('=== End Inspection ===');
     }
 
-    function clearCart() {
+    function testAnnualOnly() {
+      log('=== Testing Annual Product Only ===');
+      
+      if (typeof fastspring === 'undefined' || !fastspring.builder) {
+        log('ERROR: FastSpring not available');
+        return;
+      }
+
+      try {
+        log('Clearing cart first...');
+        fastspring.builder.reset();
+        
+        setTimeout(() => {
+          log('Adding ONLY empath-annual product...');
+          
+          fastspring.builder.push({
+            products: [{
+              path: 'empath-annual',
+              quantity: 1
+            }],
+            paymentRequestId: 'annual-only-' + Date.now()
+          });
+          
+          log('Annual-only product added');
+          isInitialized = true;
+          currentPlan = 'annual';
+          updateButtonStates();
+          updateStatus('Annual Product Test', 'purple');
+          
+          // Check for changes after delay
+          setTimeout(() => {
+            log('Inspecting after annual-only test...');
+            inspectCart();
+          }, 3000);
+          
+        }, 1000);
+        
+      } catch (error) {
+        log('ERROR in annual-only test: ' + error.message);
+        updateStatus('Annual Test Failed', 'red');
+      }
+      
+      log('=== End Annual Only Test ===');
+    }
       log('=== Clearing Cart ===');
       
       try {
@@ -361,7 +405,6 @@
       }
       
       log('=== End Clear ===');
-    }
 
     // Monitor container changes
     const observer = new MutationObserver(function(mutations) {

@@ -358,7 +358,12 @@
             path: config.productId,
             quantity: 1
           }],
-          paymentRequestId: 'checkout-init-' + Date.now()
+          paymentRequestId: 'checkout-init-' + Date.now(),
+          paymentContact: {
+            email: userInfo.email || '',
+            firstName: userInfo.displayName ? userInfo.displayName.split(' ')[0] : '',
+            lastName: userInfo.displayName ? userInfo.displayName.split(' ').slice(1).join(' ') : ''
+          }
         });
 
         // Set user recognition if available
@@ -420,7 +425,12 @@
                 path: planConfig.monthly.productId,
                 quantity: 1
               }],
-              paymentRequestId: 'switch-monthly-' + Date.now()
+              paymentRequestId: 'switch-monthly-' + Date.now(),
+              paymentContact: {
+                email: userInfo.email || '',
+                firstName: userInfo.displayName ? userInfo.displayName.split(' ')[0] : '',
+                lastName: userInfo.displayName ? userInfo.displayName.split(' ').slice(1).join(' ') : ''
+              }
             });
 
             currentPlan = 'monthly';
@@ -466,7 +476,12 @@
                 path: planConfig.annual.productId,
                 quantity: 1
               }],
-              paymentRequestId: 'switch-annual-' + Date.now()
+              paymentRequestId: 'switch-annual-' + Date.now(),
+              paymentContact: {
+                email: userInfo.email || '',
+                firstName: userInfo.displayName ? userInfo.displayName.split(' ')[0] : '',
+                lastName: userInfo.displayName ? userInfo.displayName.split(' ').slice(1).join(' ') : ''
+              }
             });
 
             currentPlan = 'annual';

@@ -258,38 +258,54 @@
           currentPlan = 'annual';
           updateButtonStates();
           updateStatus('Initialized with Annual', 'green');
+          log('Annual initialization completed');
           setTimeout(() => inspectCart(), 2000);
           return;
         } catch (error) {
           log('ERROR initializing with annual: ' + error.message);
+          updateStatus('Annual Init Failed', 'red');
           return;
         }
       }
 
       try {
-        // Remove monthly product
-        log('Removing empath-monthly from cart...');
+        // Step 1: Remove monthly product
+        log('Step 1: Removing empath-monthly from cart...');
         fastspring.builder.remove('empath-monthly');
+        log('Monthly product removal called (no error thrown)');
         
-        // Add annual product
-        log('Adding empath-annual to cart...');
-        fastspring.builder.add({
-          products: [{
-            path: 'empath-annual',
-            quantity: 1
-          }]
-        });
+        // Wait a moment, then add annual
+        setTimeout(() => {
+          try {
+            // Step 2: Add annual product
+            log('Step 2: Adding empath-annual to cart...');
+            fastspring.builder.add({
+              products: [{
+                path: 'empath-annual',
+                quantity: 1
+              }]
+            });
+            
+            log('Annual product addition called (no error thrown)');
+            currentPlan = 'annual';
+            updateButtonStates();
+            updateStatus('Switched to Annual', 'blue');
+            
+            // Check cart after both operations
+            setTimeout(() => {
+              log('Checking cart after annual switch...');
+              inspectCart();
+            }, 1000);
+            
+          } catch (addError) {
+            log('ERROR adding annual product: ' + addError.message);
+            updateStatus('Add Annual Failed', 'red');
+          }
+        }, 500);
         
-        currentPlan = 'annual';
-        updateButtonStates();
-        updateStatus('Switched to Annual', 'blue');
-        log('Successfully switched to annual');
-        
-        setTimeout(() => inspectCart(), 1000);
-        
-      } catch (error) {
-        log('ERROR switching to annual: ' + error.message);
-        updateStatus('Switch Error', 'red');
+      } catch (removeError) {
+        log('ERROR removing monthly product: ' + removeError.message);
+        updateStatus('Remove Monthly Failed', 'red');
       }
       
       log('=== End Switch to Annual ===');

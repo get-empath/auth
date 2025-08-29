@@ -819,7 +819,7 @@
           
           // Update welcome message
           const displayName = userData.displayName || userData.firstName || currentUser.displayName || 'there';
-          document.getElementById('welcome-message').textContent = `Welcome, ${firstName}!`;
+          document.getElementById('welcome-message').textContent = `Welcome, ${displayName}!`;
           
           // Update account information
           const email = userData.email || currentUser.email;

@@ -672,7 +672,7 @@
             const upgradeParams = new URLSearchParams({
               email: userData.email || currentUser.email,
               userId: currentUser.uid,
-              displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || currentUser.email.split('@')[0],
+                displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_upgrade'
             });
@@ -723,7 +723,7 @@
             const upgradeParams = new URLSearchParams({
               email: userData.email || currentUser.email,
               userId: currentUser.uid,
-              displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || currentUser.email.split('@')[0],
+                displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_reactivate'
             });
@@ -783,8 +783,7 @@
       try {
         // Update Firestore
         await firestore.collection('users').doc(currentUser.uid).update({
-          [fieldName]: newValue,
-          displayName: `${fieldName === 'firstName' ? newValue : userData.firstName || ''} ${fieldName === 'lastName' ? newValue : userData.lastName || ''}`.trim()
+        [fieldName]: newValue
         });
 
         // Update local data and UI
@@ -824,8 +823,8 @@
           userData = userDoc.data();
           
           // Update welcome message
-          const displayName = userData.displayName || userData.firstName || currentUser.displayName || 'there';
-          document.getElementById('welcome-message').textContent = `Welcome, ${displayName}!`;
+            const displayName = userData.firstName || 'there';
+            document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.firstName || 'there'}!`;
           
           // Update account information
           const email = userData.email || currentUser.email;
@@ -851,7 +850,6 @@
           // Create basic user document if it doesn't exist
           const basicUserData = {
             email: currentUser.email,
-            displayName: currentUser.displayName || currentUser.email.split('@')[0],
             firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
             lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
             subscriptionStatus: 'free',
@@ -864,7 +862,7 @@
           userData = basicUserData;
           
           // Update UI with basic info
-          document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.displayName}!`;
+            document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.firstName || 'there'}!`;
           document.getElementById('user-email').textContent = currentUser.email;
           document.getElementById('first-name-display').textContent = basicUserData.firstName || 'Not set';
           document.getElementById('last-name-display').textContent = basicUserData.lastName || 'Not set';

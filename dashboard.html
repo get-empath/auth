@@ -20,9 +20,9 @@
     }
 
     .header {
-      background: white;
-      border-bottom: 1px solid #e1e5e9;
-      padding: 20px 0;
+      background: #f8f9fa;
+      padding: 40px 0 20px 0;
+      position: relative;
     }
 
     .header-content {
@@ -30,25 +30,22 @@
       margin: 0 auto;
       padding: 0 24px;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      position: relative;
     }
 
     .logo {
-      height: 40px;
+      height: 50px;
       width: auto;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
     .sign-out-btn {
-      padding: 8px 16px;
+      position: absolute;
+      right: 24px;
+      padding: 10px 20px;
       border: 1px solid #e9ecef;
-      border-radius: 6px;
+      border-radius: 30px;
       background: white;
       color: #6c757d;
       font-size: 14px;
@@ -68,27 +65,17 @@
     }
 
     .welcome-section {
-      background: white;
-      border-radius: 12px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      padding: 40px;
-      margin-bottom: 32px;
+      text-align: center;
+      margin-bottom: 40px;
     }
 
     h1 {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      margin: 0 0 16px 0;
+      margin: 0;
       color: #1a1a1a;
       font-size: 32px;
       font-weight: 900;
       letter-spacing: -0.05rem;
-    }
-
-    .user-info {
-      color: #6c757d;
-      font-size: 16px;
-      margin-bottom: 24px;
     }
 
     .cards-grid {
@@ -123,7 +110,7 @@
     .subscription-status {
       display: inline-block;
       padding: 6px 12px;
-      border-radius: 20px;
+      border-radius: 30px;
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
@@ -178,7 +165,7 @@
     .button {
       display: inline-block;
       padding: 12px 24px;
-      border-radius: 8px;
+      border-radius: 30px;
       font-size: 14px;
       font-weight: 600;
       text-decoration: none;
@@ -200,17 +187,6 @@
       color: white;
     }
 
-    .button-secondary {
-      background: white;
-      color: #667eea;
-      border: 1px solid #667eea;
-    }
-
-    .button-secondary:hover {
-      background: #667eea;
-      color: white;
-    }
-
     .download-links {
       display: flex;
       flex-direction: column;
@@ -224,7 +200,7 @@
       padding: 16px;
       background: #f8f9fa;
       border: 1px solid #e9ecef;
-      border-radius: 8px;
+      border-radius: 30px;
       text-decoration: none;
       color: #495057;
       transition: all 0.2s ease;
@@ -280,32 +256,12 @@
       margin: 20px 0;
     }
 
-    .warning-message {
-      background: #fffbeb;
-      border: 1px solid #fed7aa;
-      color: #b45309;
-      padding: 16px;
-      border-radius: 8px;
-      margin: 20px 0;
-      text-align: center;
-    }
-
-    .info-message {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1e40af;
-      padding: 16px;
-      border-radius: 8px;
-      margin: 20px 0;
-      text-align: center;
-    }
-
     .connection-status {
       position: fixed;
       top: 20px;
       right: 20px;
       padding: 8px 16px;
-      border-radius: 20px;
+      border-radius: 30px;
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
@@ -324,25 +280,12 @@
       color: #721c24;
     }
 
-    .debug-info {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 20px 0;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 12px;
-      color: #495057;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
     .retry-button {
       background: #667eea;
       color: white;
       border: none;
       padding: 8px 16px;
-      border-radius: 6px;
+      border-radius: 30px;
       font-size: 14px;
       cursor: pointer;
       margin-top: 12px;
@@ -352,17 +295,99 @@
       background: #5a67d8;
     }
 
+    /* Account info editing styles */
+    .info-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 0;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #495057;
+      min-width: 100px;
+      margin-right: 12px;
+    }
+
+    .info-value {
+      flex: 1;
+      color: #6c757d;
+    }
+
+    .editable-field {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+
+    .edit-input {
+      display: none;
+      flex: 1;
+      padding: 6px 12px;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .edit-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .edit-actions {
+      display: none;
+      gap: 8px;
+    }
+
+    .edit-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .save-btn {
+      background: #28a745;
+      color: white;
+    }
+
+    .cancel-btn {
+      background: #6c757d;
+      color: white;
+    }
+
+    .edit-icon {
+      width: 16px;
+      height: 16px;
+      margin-left: 8px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+
+    .edit-icon:hover {
+      opacity: 0.8;
+    }
+
     /* Responsive design */
     @media (max-width: 768px) {
       .header-content {
         padding: 0 16px;
       }
       
+      .sign-out-btn {
+        position: static;
+        margin-top: 20px;
+      }
+      
       .main-container {
         padding: 24px 16px;
       }
       
-      .welcome-section, .card {
+      .card {
         padding: 24px 20px;
       }
       
@@ -374,19 +399,22 @@
         grid-template-columns: 1fr;
       }
       
-      .header-actions {
-        gap: 12px;
-      }
-      
-      .download-links {
-        gap: 8px;
-      }
-      
       .connection-status {
         position: relative;
         top: auto;
         right: auto;
         margin-bottom: 20px;
+      }
+
+      .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .info-label {
+        min-width: auto;
+        margin-right: 0;
+        margin-bottom: 4px;
       }
     }
   </style>
@@ -399,10 +427,7 @@
       <a href="https://www.get-empath.com">
         <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
       </a>
-      
-      <div class="header-actions">
-        <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
-      </div>
+      <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
     </div>
   </div>
 
@@ -415,10 +440,7 @@
     <div id="dashboard-content" style="display: none;">
       <div class="welcome-section">
         <h1 id="welcome-message">Welcome back!</h1>
-        <div class="user-info" id="user-info">Loading account information...</div>
       </div>
-
-      <div id="status-messages"></div>
 
       <div class="cards-grid">
         <div class="card">
@@ -460,10 +482,46 @@
         <div class="card">
           <h2>Account Information</h2>
           <div id="account-details">
-            <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
-            <p><strong>Member Since:</strong> <span id="member-since">Loading...</span></p>
+            <div class="info-row">
+              <span class="info-label">First Name:</span>
+              <div class="editable-field">
+                <span class="info-value" id="first-name-display">Loading...</span>
+                <input type="text" class="edit-input" id="first-name-input">
+                <div class="edit-actions">
+                  <button class="edit-btn save-btn" onclick="saveField('firstName')">Save</button>
+                  <button class="edit-btn cancel-btn" onclick="cancelEdit('firstName')">Cancel</button>
+                </div>
+                <svg class="edit-icon" onclick="editField('firstName')" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Last Name:</span>
+              <div class="editable-field">
+                <span class="info-value" id="last-name-display">Loading...</span>
+                <input type="text" class="edit-input" id="last-name-input">
+                <div class="edit-actions">
+                  <button class="edit-btn save-btn" onclick="saveField('lastName')">Save</button>
+                  <button class="edit-btn cancel-btn" onclick="cancelEdit('lastName')">Cancel</button>
+                </div>
+                <svg class="edit-icon" onclick="editField('lastName')" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value" id="user-email">Loading...</span>
+            </div>
+
             <div id="activation-date" style="display: none;">
-              <p><strong>Subscription Active Since:</strong> <span id="activation-date-text">Loading...</span></p>
+              <div class="info-row">
+                <span class="info-label">Active Since:</span>
+                <span class="info-value" id="activation-date-text">Loading...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -474,46 +532,9 @@
       <div>Failed to load dashboard data.</div>
       <button class="retry-button" id="retry-btn">Retry Loading</button>
     </div>
-
-    <div class="debug-info" id="debug-info" style="display: none;">
-      <strong>Debug Information:</strong><br>
-      <div id="debug-content"></div>
-    </div>
   </div>
 
   <script>
-    // Enhanced logging and debugging
-    const DEBUG_MODE = true; // Set to false in production
-    let debugLogs = [];
-
-    function log(message, level = 'info') {
-      const timestamp = new Date().toISOString();
-      const logEntry = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-      
-      debugLogs.push(logEntry);
-      if (debugLogs.length > 100) {
-        debugLogs = debugLogs.slice(-50); // Keep last 50 logs
-      }
-      
-      console.log(logEntry);
-      
-      if (DEBUG_MODE) {
-        updateDebugDisplay();
-      }
-      
-      // Show debug info on errors
-      if (level === 'error') {
-        document.getElementById('debug-info').style.display = 'block';
-      }
-    }
-
-    function updateDebugDisplay() {
-      const debugContent = document.getElementById('debug-content');
-      if (debugContent) {
-        debugContent.innerHTML = debugLogs.slice(-10).join('<br>');
-      }
-    }
-
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
@@ -525,7 +546,6 @@
       measurementId: 'G-W10VEF7WQL'
     };
 
-    log('Initializing Firebase...');
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const firestore = firebase.firestore();
@@ -533,14 +553,11 @@
     // Enable Firestore offline persistence
     try {
       firestore.enablePersistence({ synchronizeTabs: true })
-        .then(() => {
-          log('Firestore offline persistence enabled');
-        })
         .catch((err) => {
-          log(`Firestore persistence error: ${err.message}`, 'warn');
+          console.warn('Firestore persistence error:', err.message);
         });
     } catch (err) {
-      log(`Firestore persistence setup error: ${err.message}`, 'warn');
+      console.warn('Firestore persistence setup error:', err.message);
     }
 
     let currentUser = null;
@@ -557,11 +574,9 @@
       if (online) {
         statusEl.textContent = 'Online';
         statusEl.className = 'connection-status connection-online';
-        log('Connection status: Online');
       } else {
         statusEl.textContent = 'Offline';
         statusEl.className = 'connection-status connection-offline';
-        log('Connection status: Offline', 'warn');
       }
     }
 
@@ -569,26 +584,6 @@
     window.addEventListener('online', () => updateConnectionStatus(true));
     window.addEventListener('offline', () => updateConnectionStatus(false));
     updateConnectionStatus(navigator.onLine);
-
-    // Show status messages
-    function showStatusMessage(message, type = 'info') {
-      const container = document.getElementById('status-messages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `${type}-message`;
-      messageDiv.innerHTML = message;
-      
-      container.innerHTML = '';
-      container.appendChild(messageDiv);
-      
-      // Auto-hide success/info messages after 5 seconds
-      if (type === 'success' || type === 'info') {
-        setTimeout(() => {
-          if (container.contains(messageDiv)) {
-            container.removeChild(messageDiv);
-          }
-        }, 5000);
-      }
-    }
 
     // Format date helper
     function formatDate(timestamp) {
@@ -610,7 +605,6 @@
           day: 'numeric'
         });
       } catch (error) {
-        log(`Date formatting error: ${error.message}`, 'error');
         return 'Date error';
       }
     }
@@ -621,7 +615,6 @@
       document.querySelector('.loading-text').textContent = message;
       document.getElementById('dashboard-content').style.display = 'none';
       document.getElementById('error-state').style.display = 'none';
-      log(`Loading state: ${message}`);
     }
 
     // Show dashboard content
@@ -629,7 +622,6 @@
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('dashboard-content').style.display = 'block';
       document.getElementById('error-state').style.display = 'none';
-      log('Dashboard content displayed');
     }
 
     // Show error state
@@ -638,13 +630,10 @@
       document.getElementById('dashboard-content').style.display = 'none';
       document.getElementById('error-state').style.display = 'block';
       document.getElementById('error-state').querySelector('div').textContent = message;
-      log(`Error state: ${message}`, 'error');
     }
 
     // Update subscription status display
     function updateSubscriptionStatus(status, plan) {
-      log(`Updating subscription status: ${status}, plan: ${plan}`);
-      
       const statusElement = document.getElementById('subscription-status');
       const planNameElement = document.getElementById('plan-name');
       const planDetailsElement = document.getElementById('plan-details');
@@ -677,6 +666,18 @@
           planNameElement.textContent = 'Free Plan';
           planDetailsElement.textContent = 'Basic features included';
           upgradeBtn.style.display = 'inline-block';
+          
+          // Update upgrade button with user info for checkout pre-filling
+          if (currentUser && userData) {
+            const upgradeParams = new URLSearchParams({
+              email: userData.email || currentUser.email,
+              userId: currentUser.uid,
+              displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || currentUser.email.split('@')[0],
+              plan: 'monthly',
+              source: 'dashboard_upgrade'
+            });
+            upgradeBtn.href = `https://auth.get-empath.com/checkout?${upgradeParams.toString()}`;
+          }
           break;
 
         case 'active':
@@ -716,6 +717,18 @@
           planNameElement.textContent = 'Subscription Canceled';
           planDetailsElement.textContent = 'Your subscription has been canceled';
           upgradeBtn.style.display = 'inline-block';
+          
+          // Update upgrade button with user info for checkout pre-filling
+          if (currentUser && userData) {
+            const upgradeParams = new URLSearchParams({
+              email: userData.email || currentUser.email,
+              userId: currentUser.uid,
+              displayName: userData.displayName || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || currentUser.email.split('@')[0],
+              plan: 'monthly',
+              source: 'dashboard_reactivate'
+            });
+            upgradeBtn.href = `https://auth.get-empath.com/checkout?${upgradeParams.toString()}`;
+          }
           break;
 
         default:
@@ -724,14 +737,75 @@
           planNameElement.textContent = 'Unknown Plan';
           planDetailsElement.textContent = 'Please contact support if this persists';
           retryBtn.style.display = 'inline-block';
-          log(`Unknown subscription status: ${status}`, 'warn');
+      }
+    }
+
+    // Inline editing functions
+    function editField(fieldName) {
+      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
+      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
+      const actions = input.parentNode.querySelector('.edit-actions');
+      const icon = input.parentNode.querySelector('.edit-icon');
+
+      display.style.display = 'none';
+      input.style.display = 'block';
+      actions.style.display = 'flex';
+      icon.style.display = 'none';
+      
+      input.value = display.textContent;
+      input.focus();
+    }
+
+    function cancelEdit(fieldName) {
+      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
+      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
+      const actions = input.parentNode.querySelector('.edit-actions');
+      const icon = input.parentNode.querySelector('.edit-icon');
+
+      display.style.display = 'block';
+      input.style.display = 'none';
+      actions.style.display = 'none';
+      icon.style.display = 'block';
+    }
+
+    async function saveField(fieldName) {
+      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
+      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
+      const actions = input.parentNode.querySelector('.edit-actions');
+      const icon = input.parentNode.querySelector('.edit-icon');
+
+      const newValue = input.value.trim();
+      if (!newValue) {
+        alert('Field cannot be empty');
+        return;
+      }
+
+      try {
+        // Update Firestore
+        await firestore.collection('users').doc(currentUser.uid).update({
+          [fieldName]: newValue,
+          displayName: `${fieldName === 'firstName' ? newValue : userData.firstName || ''} ${fieldName === 'lastName' ? newValue : userData.lastName || ''}`.trim()
+        });
+
+        // Update local data and UI
+        userData[fieldName] = newValue;
+        if (fieldName === 'firstName' || fieldName === 'lastName') {
+          userData.displayName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+          document.getElementById('welcome-message').textContent = `Welcome back, ${userData.firstName || 'there'}!`;
+        }
+
+        display.textContent = newValue;
+        cancelEdit(fieldName);
+
+      } catch (error) {
+        console.error('Error updating field:', error);
+        alert('Failed to update information. Please try again.');
       }
     }
 
     // Load user data from Firestore with retry logic
     async function loadUserData(userId, isRetry = false) {
       const attemptNumber = retryAttempts + 1;
-      log(`Loading user data (attempt ${attemptNumber}/${maxRetryAttempts}) for user: ${userId}`);
       
       if (isRetry) {
         showLoading('Retrying data load...');
@@ -746,23 +820,18 @@
         const userDocPromise = firestore.collection('users').doc(userId).get();
         const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
         
-        log(`Firestore document fetch completed. Exists: ${userDoc.exists}`);
-        
         if (userDoc.exists) {
           userData = userDoc.data();
-          log(`User data loaded successfully: ${JSON.stringify(userData, null, 2)}`);
           
           // Update welcome message
           const displayName = userData.displayName || userData.firstName || currentUser.displayName || 'there';
           document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
           
-          // Update user info
+          // Update account information
           const email = userData.email || currentUser.email;
-          const memberSince = formatDate(userData.createdAt);
-          
-          document.getElementById('user-info').textContent = `${email} • Member since ${memberSince}`;
           document.getElementById('user-email').textContent = email;
-          document.getElementById('member-since').textContent = memberSince;
+          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
           
           // Update subscription status
           const status = userData.subscriptionStatus || 'free';
@@ -774,15 +843,11 @@
             const manageBillingBtn = document.getElementById('manage-billing-btn');
             const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(email)}`;
             manageBillingBtn.href = billingUrl;
-            log(`Billing management URL set: ${billingUrl}`);
           }
           
           retryAttempts = 0; // Reset retry counter on success
-          showStatusMessage('✅ Dashboard data loaded successfully', 'success');
           
         } else {
-          log('No user document found, creating basic user document...', 'warn');
-          
           // Create basic user document if it doesn't exist
           const basicUserData = {
             email: currentUser.email,
@@ -796,54 +861,44 @@
           };
           
           await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
-          log('Basic user document created successfully');
+          userData = basicUserData;
           
           // Update UI with basic info
           document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.displayName}!`;
-          document.getElementById('user-info').textContent = `${currentUser.email} • Just joined`;
           document.getElementById('user-email').textContent = currentUser.email;
-          document.getElementById('member-since').textContent = 'Just joined';
+          document.getElementById('first-name-display').textContent = basicUserData.firstName || 'Not set';
+          document.getElementById('last-name-display').textContent = basicUserData.lastName || 'Not set';
           
           updateSubscriptionStatus('free', 'free');
-          showStatusMessage('👋 Welcome! Your account has been set up with a free plan.', 'info');
         }
         
         showDashboard();
         
       } catch (error) {
-        log(`Error loading user data: ${error.message}`, 'error');
-        log(`Error code: ${error.code || 'unknown'}`, 'error');
-        log(`Error stack: ${error.stack || 'no stack trace'}`, 'error');
-        
+        console.error('Error loading user data:', error);
         retryAttempts++;
         
         // Handle different error types
         if (error.code === 'unavailable' || error.message.includes('offline')) {
-          log('Detected offline/unavailable error', 'warn');
           updateConnectionStatus(false);
           
           if (retryAttempts < maxRetryAttempts) {
-            showStatusMessage(`⚠️ Connection issue detected. Retrying in 3 seconds... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
             setTimeout(() => {
               loadUserData(userId, true);
             }, 3000);
           } else {
             showError('Unable to connect to our servers. Please check your internet connection.');
             updateSubscriptionStatus(null, null); // Show offline state
-            showStatusMessage('⚠️ Working in offline mode. Some features may be limited.', 'warning');
             
             // Show dashboard with limited info from Firebase Auth
             document.getElementById('welcome-message').textContent = `Welcome back!`;
-            document.getElementById('user-info').textContent = `${currentUser.email} • Unable to load full account data`;
             document.getElementById('user-email').textContent = currentUser.email;
-            document.getElementById('member-since').textContent = 'Unable to load';
+            document.getElementById('first-name-display').textContent = 'Unable to load';
+            document.getElementById('last-name-display').textContent = 'Unable to load';
             showDashboard();
           }
         } else if (error.message.includes('timeout')) {
-          log('Detected timeout error', 'warn');
-          
           if (retryAttempts < maxRetryAttempts) {
-            showStatusMessage(`⏱️ Request timed out. Retrying... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
             setTimeout(() => {
               loadUserData(userId, true);
             }, 2000);
@@ -851,13 +906,9 @@
             showError('Server response timeout. Please try again later.');
           }
         } else if (error.code === 'permission-denied') {
-          log('Permission denied error', 'error');
           showError('Access denied. Please sign out and sign in again.');
         } else {
-          log('Unknown error type', 'error');
-          
           if (retryAttempts < maxRetryAttempts) {
-            showStatusMessage(`❌ Error loading data. Retrying... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
             setTimeout(() => {
               loadUserData(userId, true);
             }, 2000);
@@ -879,11 +930,6 @@
     // Authentication state handler
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        log(`User authenticated: ${user.uid} (${user.email})`);
-        log(`User email verified: ${user.emailVerified}`);
-        log(`User creation time: ${user.metadata.creationTime}`);
-        log(`User last sign in: ${user.metadata.lastSignInTime}`);
-        
         currentUser = user;
         retryAttempts = 0;
         
@@ -891,40 +937,31 @@
         await loadUserData(user.uid);
         
       } else {
-        log('No user authenticated, redirecting to login');
         window.location.href = '/login';
       }
     });
 
     // Sign out handler
     document.getElementById('sign-out-btn').addEventListener('click', async () => {
-      log('Sign out initiated');
       try {
         await auth.signOut();
-        log('User signed out successfully');
         window.location.href = '/login';
       } catch (error) {
-        log(`Sign out error: ${error.message}`, 'error');
+        console.error('Sign out error:', error);
         alert('Failed to sign out. Please try again.');
       }
     });
 
     // Retry button handlers
     document.getElementById('retry-btn').addEventListener('click', () => {
-      log('Manual retry from error state');
       retryLoadUserData();
     });
 
     document.getElementById('retry-data-btn').addEventListener('click', () => {
-      log('Manual retry from subscription card');
       retryLoadUserData();
     });
 
     // Initialize dashboard
-    log('Dashboard page loaded and initializing...');
-    log(`Navigator online: ${navigator.onLine}`);
-    log(`User agent: ${navigator.userAgent}`);
-    log(`Current URL: ${window.location.href}`);
     showLoading();
 
     // Listen for real-time updates to user document
@@ -932,49 +969,42 @@
 
     function setupUserDocumentListener(userId) {
       if (userDocListener) {
-        log('Unsubscribing from previous document listener');
         userDocListener(); // Unsubscribe previous listener
       }
 
-      log(`Setting up real-time listener for user: ${userId}`);
       userDocListener = firestore.collection('users').doc(userId).onSnapshot((doc) => {
-        log('Real-time document update received');
-        
         if (doc.exists) {
           const updatedData = doc.data();
-          log(`Updated data: ${JSON.stringify(updatedData, null, 2)}`);
           
           // Check if subscription status changed
           if (userData && updatedData.subscriptionStatus !== userData.subscriptionStatus) {
-            log(`Subscription status changed: ${userData.subscriptionStatus} → ${updatedData.subscriptionStatus}`);
             userData = updatedData;
             
             const status = userData.subscriptionStatus || 'free';
             const plan = userData.plan || 'free';
             updateSubscriptionStatus(status, plan);
             
-            showStatusMessage('✅ Subscription status updated!', 'success');
-            
             // Update billing management link if needed
             if (userData.fastspringCustomerId && status === 'active') {
               const manageBillingBtn = document.getElementById('manage-billing-btn');
               const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(userData.email)}`;
               manageBillingBtn.href = billingUrl;
-              log(`Updated billing management URL: ${billingUrl}`);
             }
-          } else {
+          } else if (userData) {
+            // Update other fields that might have changed
             userData = updatedData;
-            log('Document updated but no subscription status change');
+            document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+            document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+            
+            if (userData.firstName) {
+              document.getElementById('welcome-message').textContent = `Welcome back, ${userData.firstName}!`;
+            }
           }
-        } else {
-          log('Document no longer exists', 'warn');
         }
       }, (error) => {
-        log(`Real-time listener error: ${error.message}`, 'error');
-        log(`Listener error code: ${error.code}`, 'error');
+        console.error('Real-time listener error:', error);
         
         if (error.code === 'unavailable') {
-          log('Real-time listener unavailable, likely offline', 'warn');
           updateConnectionStatus(false);
         }
       });
@@ -985,7 +1015,6 @@
       if (user) {
         setupUserDocumentListener(user.uid);
       } else if (userDocListener) {
-        log('Cleaning up document listener');
         userDocListener(); // Cleanup listener
         userDocListener = null;
       }
@@ -994,19 +1023,16 @@
     // Cleanup listener when page unloads
     window.addEventListener('beforeunload', () => {
       if (userDocListener) {
-        log('Page unloading, cleaning up listeners');
         userDocListener();
       }
     });
 
     // Network status change handlers
     window.addEventListener('online', () => {
-      log('Network came back online');
       updateConnectionStatus(true);
       
       // Retry loading data if we're in an error state and have a user
       if (currentUser && (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0)) {
-        showStatusMessage('🌐 Connection restored! Refreshing data...', 'info');
         retryAttempts = 0;
         setTimeout(() => {
           loadUserData(currentUser.uid, true);
@@ -1015,9 +1041,7 @@
     });
 
     window.addEventListener('offline', () => {
-      log('Network went offline');
       updateConnectionStatus(false);
-      showStatusMessage('⚠️ You are currently offline. Some features may not be available.', 'warning');
     });
 
     // Periodic connection check (every 30 seconds)
@@ -1026,7 +1050,6 @@
       updateConnectionStatus(navigator.onLine);
       
       if (wasOffline && navigator.onLine && currentUser) {
-        log('Periodic check detected connection restored');
         // Only retry if we were in an error state
         if (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0) {
           retryAttempts = 0;
@@ -1037,31 +1060,12 @@
 
     // Error reporting for debugging
     window.addEventListener('error', (event) => {
-      log(`Global error: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+      console.error(`Global error: ${event.message} at ${event.filename}:${event.lineno}`);
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-      log(`Unhandled promise rejection: ${event.reason}`, 'error');
+      console.error(`Unhandled promise rejection: ${event.reason}`);
     });
-
-    // Expose debug functions for console access
-    if (DEBUG_MODE) {
-      window.empathDebug = {
-        getLogs: () => debugLogs,
-        clearLogs: () => {
-          debugLogs = [];
-          updateDebugDisplay();
-        },
-        retryLoad: retryLoadUserData,
-        getCurrentUser: () => currentUser,
-        getUserData: () => userData,
-        getConnectionStatus: () => !isOffline
-      };
-      
-      log('Debug mode enabled. Use window.empathDebug for debugging functions');
-    }
-
-    log('Dashboard initialization complete');
   </script>
 </body>
 </html>

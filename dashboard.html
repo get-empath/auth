@@ -151,6 +151,11 @@
       color: #721c24;
     }
 
+    .status-offline {
+      background: #f1f3f4;
+      color: #5f6368;
+    }
+
     .plan-info {
       background: #f8f9fa;
       border: 1px solid #e9ecef;
@@ -243,6 +248,7 @@
       justify-content: center;
       align-items: center;
       min-height: 400px;
+      flex-direction: column;
     }
 
     .spinner {
@@ -252,11 +258,16 @@
       border-radius: 50%;
       border-top-color: #667eea;
       animation: spin 1s linear infinite;
-      margin-right: 16px;
+      margin-bottom: 16px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #6c757d;
+      font-size: 14px;
     }
 
     .error-message {
@@ -269,10 +280,76 @@
       margin: 20px 0;
     }
 
-    .empty-state {
+    .warning-message {
+      background: #fffbeb;
+      border: 1px solid #fed7aa;
+      color: #b45309;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
       text-align: center;
-      color: #6c757d;
-      padding: 40px;
+    }
+
+    .info-message {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .connection-online {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .connection-offline {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .debug-info {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      color: #495057;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .retry-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .retry-button:hover {
+      background: #5a67d8;
     }
 
     /* Responsive design */
@@ -304,10 +381,19 @@
       .download-links {
         gap: 8px;
       }
+      
+      .connection-status {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 20px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="connection-status" id="connection-status">Checking...</div>
+
   <div class="header">
     <div class="header-content">
       <a href="https://www.get-empath.com">
@@ -323,7 +409,7 @@
   <div class="main-container">
     <div id="loading-state" class="loading-state">
       <div class="spinner"></div>
-      <span>Loading your dashboard...</span>
+      <div class="loading-text">Loading your dashboard...</div>
     </div>
 
     <div id="dashboard-content" style="display: none;">
@@ -331,6 +417,8 @@
         <h1 id="welcome-message">Welcome back!</h1>
         <div class="user-info" id="user-info">Loading account information...</div>
       </div>
+
+      <div id="status-messages"></div>
 
       <div class="cards-grid">
         <div class="card">
@@ -349,6 +437,9 @@
             <a href="https://get-empath.com/signup?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
               Upgrade to Pro
             </a>
+            <button class="retry-button" id="retry-data-btn" style="display: none;">
+              Retry Loading Data
+            </button>
           </div>
         </div>
 
@@ -387,11 +478,49 @@
     </div>
 
     <div id="error-state" class="error-message" style="display: none;">
-      Failed to load dashboard. Please try refreshing the page.
+      <div>Failed to load dashboard data.</div>
+      <button class="retry-button" id="retry-btn">Retry Loading</button>
+    </div>
+
+    <div class="debug-info" id="debug-info" style="display: none;">
+      <strong>Debug Information:</strong><br>
+      <div id="debug-content"></div>
     </div>
   </div>
 
   <script>
+    // Enhanced logging and debugging
+    const DEBUG_MODE = true; // Set to false in production
+    let debugLogs = [];
+
+    function log(message, level = 'info') {
+      const timestamp = new Date().toISOString();
+      const logEntry = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+      
+      debugLogs.push(logEntry);
+      if (debugLogs.length > 100) {
+        debugLogs = debugLogs.slice(-50); // Keep last 50 logs
+      }
+      
+      console.log(logEntry);
+      
+      if (DEBUG_MODE) {
+        updateDebugDisplay();
+      }
+      
+      // Show debug info on errors
+      if (level === 'error') {
+        document.getElementById('debug-info').style.display = 'block';
+      }
+    }
+
+    function updateDebugDisplay() {
+      const debugContent = document.getElementById('debug-content');
+      if (debugContent) {
+        debugContent.innerHTML = debugLogs.slice(-10).join('<br>');
+      }
+    }
+
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
@@ -403,38 +532,103 @@
       measurementId: 'G-W10VEF7WQL'
     };
 
+    log('Initializing Firebase...');
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const firestore = firebase.firestore();
+    
+    // Enable Firestore offline persistence
+    try {
+      firestore.enablePersistence({ synchronizeTabs: true })
+        .then(() => {
+          log('Firestore offline persistence enabled');
+        })
+        .catch((err) => {
+          log(`Firestore persistence error: ${err.message}`, 'warn');
+        });
+    } catch (err) {
+      log(`Firestore persistence setup error: ${err.message}`, 'warn');
+    }
 
     let currentUser = null;
     let userData = null;
+    let isOffline = false;
+    let retryAttempts = 0;
+    const maxRetryAttempts = 3;
+
+    // Connection status monitoring
+    function updateConnectionStatus(online) {
+      const statusEl = document.getElementById('connection-status');
+      isOffline = !online;
+      
+      if (online) {
+        statusEl.textContent = 'Online';
+        statusEl.className = 'connection-status connection-online';
+        log('Connection status: Online');
+      } else {
+        statusEl.textContent = 'Offline';
+        statusEl.className = 'connection-status connection-offline';
+        log('Connection status: Offline', 'warn');
+      }
+    }
+
+    // Monitor network status
+    window.addEventListener('online', () => updateConnectionStatus(true));
+    window.addEventListener('offline', () => updateConnectionStatus(false));
+    updateConnectionStatus(navigator.onLine);
+
+    // Show status messages
+    function showStatusMessage(message, type = 'info') {
+      const container = document.getElementById('status-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `${type}-message`;
+      messageDiv.innerHTML = message;
+      
+      container.innerHTML = '';
+      container.appendChild(messageDiv);
+      
+      // Auto-hide success/info messages after 5 seconds
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => {
+          if (container.contains(messageDiv)) {
+            container.removeChild(messageDiv);
+          }
+        }, 5000);
+      }
+    }
 
     // Format date helper
     function formatDate(timestamp) {
       if (!timestamp) return 'Unknown';
       
-      let date;
-      if (timestamp.toDate) {
-        date = timestamp.toDate();
-      } else if (timestamp instanceof Date) {
-        date = timestamp;
-      } else {
-        date = new Date(timestamp);
+      try {
+        let date;
+        if (timestamp.toDate) {
+          date = timestamp.toDate();
+        } else if (timestamp instanceof Date) {
+          date = timestamp;
+        } else {
+          date = new Date(timestamp);
+        }
+        
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } catch (error) {
+        log(`Date formatting error: ${error.message}`, 'error');
+        return 'Date error';
       }
-      
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
     }
 
     // Show loading state
-    function showLoading() {
+    function showLoading(message = 'Loading your dashboard...') {
       document.getElementById('loading-state').style.display = 'flex';
+      document.querySelector('.loading-text').textContent = message;
       document.getElementById('dashboard-content').style.display = 'none';
       document.getElementById('error-state').style.display = 'none';
+      log(`Loading state: ${message}`);
     }
 
     // Show dashboard content
@@ -442,29 +636,46 @@
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('dashboard-content').style.display = 'block';
       document.getElementById('error-state').style.display = 'none';
+      log('Dashboard content displayed');
     }
 
     // Show error state
-    function showError() {
+    function showError(message = 'Failed to load dashboard data.') {
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('dashboard-content').style.display = 'none';
       document.getElementById('error-state').style.display = 'block';
+      document.getElementById('error-state').querySelector('div').textContent = message;
+      log(`Error state: ${message}`, 'error');
     }
 
-   // Update subscription status display
+    // Update subscription status display
     function updateSubscriptionStatus(status, plan) {
+      log(`Updating subscription status: ${status}, plan: ${plan}`);
+      
       const statusElement = document.getElementById('subscription-status');
       const planNameElement = document.getElementById('plan-name');
       const planDetailsElement = document.getElementById('plan-details');
       const manageBillingBtn = document.getElementById('manage-billing-btn');
       const upgradeBtn = document.getElementById('upgrade-btn');
+      const retryBtn = document.getElementById('retry-data-btn');
       const activationDateDiv = document.getElementById('activation-date');
 
       // Reset classes and visibility
       statusElement.className = 'subscription-status';
       manageBillingBtn.style.display = 'none';
       upgradeBtn.style.display = 'none';
+      retryBtn.style.display = 'none';
       activationDateDiv.style.display = 'none';
+
+      // Handle offline state
+      if (isOffline && !status) {
+        statusElement.classList.add('status-offline');
+        statusElement.textContent = 'Offline';
+        planNameElement.textContent = 'Unable to load';
+        planDetailsElement.textContent = 'Please check your internet connection';
+        retryBtn.style.display = 'inline-block';
+        return;
+      }
 
       switch (status) {
         case 'free':
@@ -518,21 +729,38 @@
           statusElement.classList.add('status-free');
           statusElement.textContent = 'Unknown Status';
           planNameElement.textContent = 'Unknown Plan';
-          planDetailsElement.textContent = 'Please contact support';
+          planDetailsElement.textContent = 'Please contact support if this persists';
+          retryBtn.style.display = 'inline-block';
+          log(`Unknown subscription status: ${status}`, 'warn');
       }
     }
 
-    // Load user data from Firestore
-    async function loadUserData(userId) {
+    // Load user data from Firestore with retry logic
+    async function loadUserData(userId, isRetry = false) {
+      const attemptNumber = retryAttempts + 1;
+      log(`Loading user data (attempt ${attemptNumber}/${maxRetryAttempts}) for user: ${userId}`);
+      
+      if (isRetry) {
+        showLoading('Retrying data load...');
+      }
+
       try {
-        const userDoc = await firestore.collection('users').doc(userId).get();
+        // Add timeout to detect hanging requests
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Firestore request timeout after 10 seconds')), 10000);
+        });
+
+        const userDocPromise = firestore.collection('users').doc(userId).get();
+        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+        
+        log(`Firestore document fetch completed. Exists: ${userDoc.exists}`);
         
         if (userDoc.exists) {
           userData = userDoc.data();
-          console.log('User data loaded:', userData);
+          log(`User data loaded successfully: ${JSON.stringify(userData, null, 2)}`);
           
           // Update welcome message
-          const displayName = userData.displayName || userData.firstName || 'there';
+          const displayName = userData.displayName || userData.firstName || currentUser.displayName || 'there';
           document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
           
           // Update user info
@@ -551,22 +779,31 @@
           // Setup billing management if user has FastSpring customer ID
           if (userData.fastspringCustomerId && status === 'active') {
             const manageBillingBtn = document.getElementById('manage-billing-btn');
-            manageBillingBtn.href = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(email)}`;
+            const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(email)}`;
+            manageBillingBtn.href = billingUrl;
+            log(`Billing management URL set: ${billingUrl}`);
           }
           
+          retryAttempts = 0; // Reset retry counter on success
+          showStatusMessage('✅ Dashboard data loaded successfully', 'success');
+          
         } else {
-          console.warn('No user document found, creating basic one...');
+          log('No user document found, creating basic user document...', 'warn');
           
           // Create basic user document if it doesn't exist
           const basicUserData = {
             email: currentUser.email,
             displayName: currentUser.displayName || currentUser.email.split('@')[0],
+            firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
+            lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
             subscriptionStatus: 'free',
             plan: 'free',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdVia: 'dashboard_auto_create'
           };
           
           await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+          log('Basic user document created successfully');
           
           // Update UI with basic info
           document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.displayName}!`;
@@ -575,45 +812,126 @@
           document.getElementById('member-since').textContent = 'Just joined';
           
           updateSubscriptionStatus('free', 'free');
+          showStatusMessage('👋 Welcome! Your account has been set up with a free plan.', 'info');
         }
         
         showDashboard();
         
       } catch (error) {
-        console.error('Error loading user data:', error);
-        showError();
+        log(`Error loading user data: ${error.message}`, 'error');
+        log(`Error code: ${error.code || 'unknown'}`, 'error');
+        log(`Error stack: ${error.stack || 'no stack trace'}`, 'error');
+        
+        retryAttempts++;
+        
+        // Handle different error types
+        if (error.code === 'unavailable' || error.message.includes('offline')) {
+          log('Detected offline/unavailable error', 'warn');
+          updateConnectionStatus(false);
+          
+          if (retryAttempts < maxRetryAttempts) {
+            showStatusMessage(`⚠️ Connection issue detected. Retrying in 3 seconds... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
+            setTimeout(() => {
+              loadUserData(userId, true);
+            }, 3000);
+          } else {
+            showError('Unable to connect to our servers. Please check your internet connection.');
+            updateSubscriptionStatus(null, null); // Show offline state
+            showStatusMessage('⚠️ Working in offline mode. Some features may be limited.', 'warning');
+            
+            // Show dashboard with limited info from Firebase Auth
+            document.getElementById('welcome-message').textContent = `Welcome back!`;
+            document.getElementById('user-info').textContent = `${currentUser.email} • Unable to load full account data`;
+            document.getElementById('user-email').textContent = currentUser.email;
+            document.getElementById('member-since').textContent = 'Unable to load';
+            showDashboard();
+          }
+        } else if (error.message.includes('timeout')) {
+          log('Detected timeout error', 'warn');
+          
+          if (retryAttempts < maxRetryAttempts) {
+            showStatusMessage(`⏱️ Request timed out. Retrying... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
+            setTimeout(() => {
+              loadUserData(userId, true);
+            }, 2000);
+          } else {
+            showError('Server response timeout. Please try again later.');
+          }
+        } else if (error.code === 'permission-denied') {
+          log('Permission denied error', 'error');
+          showError('Access denied. Please sign out and sign in again.');
+        } else {
+          log('Unknown error type', 'error');
+          
+          if (retryAttempts < maxRetryAttempts) {
+            showStatusMessage(`❌ Error loading data. Retrying... (${retryAttempts}/${maxRetryAttempts})`, 'warning');
+            setTimeout(() => {
+              loadUserData(userId, true);
+            }, 2000);
+          } else {
+            showError(`Failed to load account data: ${error.message}`);
+          }
+        }
+      }
+    }
+
+    // Manual retry function
+    function retryLoadUserData() {
+      if (currentUser) {
+        retryAttempts = 0;
+        loadUserData(currentUser.uid, true);
       }
     }
 
     // Authentication state handler
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        console.log('User authenticated:', user.uid);
+        log(`User authenticated: ${user.uid} (${user.email})`);
+        log(`User email verified: ${user.emailVerified}`);
+        log(`User creation time: ${user.metadata.creationTime}`);
+        log(`User last sign in: ${user.metadata.lastSignInTime}`);
+        
         currentUser = user;
+        retryAttempts = 0;
         
         // Load user data from Firestore
         await loadUserData(user.uid);
         
       } else {
-        console.log('No user authenticated, redirecting to login');
+        log('No user authenticated, redirecting to login');
         window.location.href = '/login';
       }
     });
 
     // Sign out handler
     document.getElementById('sign-out-btn').addEventListener('click', async () => {
+      log('Sign out initiated');
       try {
         await auth.signOut();
-        console.log('User signed out');
+        log('User signed out successfully');
         window.location.href = '/login';
       } catch (error) {
-        console.error('Sign out error:', error);
+        log(`Sign out error: ${error.message}`, 'error');
         alert('Failed to sign out. Please try again.');
       }
     });
 
+    // Retry button handlers
+    document.getElementById('retry-btn').addEventListener('click', () => {
+      log('Manual retry from error state');
+      retryLoadUserData();
+    });
+
+    document.getElementById('retry-data-btn').addEventListener('click', () => {
+      log('Manual retry from subscription card');
+      retryLoadUserData();
+    });
+
     // Initialize dashboard
-    console.log('Dashboard page loaded');
+    log('Dashboard page loaded and initializing...');
+    log(`Navigator online: ${navigator.onLine}`);
+    log(`User agent: ${navigator.userAgent}`);
+    log(`Current URL: ${window.location.href}`);
     showLoading();
 
     // Listen for real-time updates to user document
@@ -621,31 +939,51 @@
 
     function setupUserDocumentListener(userId) {
       if (userDocListener) {
+        log('Unsubscribing from previous document listener');
         userDocListener(); // Unsubscribe previous listener
       }
 
+      log(`Setting up real-time listener for user: ${userId}`);
       userDocListener = firestore.collection('users').doc(userId).onSnapshot((doc) => {
+        log('Real-time document update received');
+        
         if (doc.exists) {
           const updatedData = doc.data();
+          log(`Updated data: ${JSON.stringify(updatedData, null, 2)}`);
           
           // Check if subscription status changed
           if (userData && updatedData.subscriptionStatus !== userData.subscriptionStatus) {
-            console.log('Subscription status updated:', updatedData.subscriptionStatus);
+            log(`Subscription status changed: ${userData.subscriptionStatus} → ${updatedData.subscriptionStatus}`);
             userData = updatedData;
             
             const status = userData.subscriptionStatus || 'free';
             const plan = userData.plan || 'free';
             updateSubscriptionStatus(status, plan);
             
+            showStatusMessage('✅ Subscription status updated!', 'success');
+            
             // Update billing management link if needed
             if (userData.fastspringCustomerId && status === 'active') {
               const manageBillingBtn = document.getElementById('manage-billing-btn');
-              manageBillingBtn.href = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(userData.email)}`;
+              const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(userData.email)}`;
+              manageBillingBtn.href = billingUrl;
+              log(`Updated billing management URL: ${billingUrl}`);
             }
+          } else {
+            userData = updatedData;
+            log('Document updated but no subscription status change');
           }
+        } else {
+          log('Document no longer exists', 'warn');
         }
       }, (error) => {
-        console.error('Error listening to user document updates:', error);
+        log(`Real-time listener error: ${error.message}`, 'error');
+        log(`Listener error code: ${error.code}`, 'error');
+        
+        if (error.code === 'unavailable') {
+          log('Real-time listener unavailable, likely offline', 'warn');
+          updateConnectionStatus(false);
+        }
       });
     }
 
@@ -654,6 +992,7 @@
       if (user) {
         setupUserDocumentListener(user.uid);
       } else if (userDocListener) {
+        log('Cleaning up document listener');
         userDocListener(); // Cleanup listener
         userDocListener = null;
       }
@@ -662,9 +1001,74 @@
     // Cleanup listener when page unloads
     window.addEventListener('beforeunload', () => {
       if (userDocListener) {
+        log('Page unloading, cleaning up listeners');
         userDocListener();
       }
     });
+
+    // Network status change handlers
+    window.addEventListener('online', () => {
+      log('Network came back online');
+      updateConnectionStatus(true);
+      
+      // Retry loading data if we're in an error state and have a user
+      if (currentUser && (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0)) {
+        showStatusMessage('🌐 Connection restored! Refreshing data...', 'info');
+        retryAttempts = 0;
+        setTimeout(() => {
+          loadUserData(currentUser.uid, true);
+        }, 1000);
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      log('Network went offline');
+      updateConnectionStatus(false);
+      showStatusMessage('⚠️ You are currently offline. Some features may not be available.', 'warning');
+    });
+
+    // Periodic connection check (every 30 seconds)
+    setInterval(() => {
+      const wasOffline = isOffline;
+      updateConnectionStatus(navigator.onLine);
+      
+      if (wasOffline && navigator.onLine && currentUser) {
+        log('Periodic check detected connection restored');
+        // Only retry if we were in an error state
+        if (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0) {
+          retryAttempts = 0;
+          loadUserData(currentUser.uid, true);
+        }
+      }
+    }, 30000);
+
+    // Error reporting for debugging
+    window.addEventListener('error', (event) => {
+      log(`Global error: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      log(`Unhandled promise rejection: ${event.reason}`, 'error');
+    });
+
+    // Expose debug functions for console access
+    if (DEBUG_MODE) {
+      window.empathDebug = {
+        getLogs: () => debugLogs,
+        clearLogs: () => {
+          debugLogs = [];
+          updateDebugDisplay();
+        },
+        retryLoad: retryLoadUserData,
+        getCurrentUser: () => currentUser,
+        getUserData: () => userData,
+        getConnectionStatus: () => !isOffline
+      };
+      
+      log('Debug mode enabled. Use window.empathDebug for debugging functions');
+    }
+
+    log('Dashboard initialization complete');
   </script>
 </body>
 </html>

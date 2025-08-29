@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Empath</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: white;
+      border-bottom: 1px solid #e1e5e9;
+      padding: 20px 0;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      height: 40px;
+      width: auto;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .sign-out-btn {
+      padding: 8px 16px;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      background: white;
+      color: #6c757d;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sign-out-btn:hover {
+      background: #f8f9fa;
+      border-color: #dee2e6;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .welcome-section {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e1e5e9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 40px;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0 0 16px 0;
+      color: #1a1a1a;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.05rem;
+    }
+
+    .user-info {
+      color: #6c757d;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e1e5e9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 32px;
+    }
+
+    .card h2 {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0 0 16px 0;
+      color: #1a1a1a;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02rem;
+    }
+
+    .card p {
+      color: #6c757d;
+      margin: 0 0 16px 0;
+      line-height: 1.5;
+    }
+
+    .subscription-status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .status-free {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .status-active {
+      background: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #664d03;
+    }
+
+    .status-canceled {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .plan-info {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .plan-name {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 4px;
+    }
+
+    .plan-details {
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      text-align: center;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    }
+
+    .button-primary:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      transform: translateY(-1px);
+      color: white;
+    }
+
+    .button-secondary {
+      background: white;
+      color: #667eea;
+      border: 1px solid #667eea;
+    }
+
+    .button-secondary:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .download-links {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .download-link {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #495057;
+      transition: all 0.2s ease;
+    }
+
+    .download-link:hover {
+      background: white;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .download-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+      opacity: 0.7;
+    }
+
+    .loading-state {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(102, 126, 234, 0.3);
+      border-radius: 50%;
+      border-top-color: #667eea;
+      animation: spin 1s linear infinite;
+      margin-right: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #6c757d;
+      padding: 40px;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0 16px;
+      }
+      
+      .main-container {
+        padding: 24px 16px;
+      }
+      
+      .welcome-section, .card {
+        padding: 24px 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-actions {
+        gap: 12px;
+      }
+      
+      .download-links {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <a href="https://www.get-empath.com">
+        <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
+      </a>
+      
+      <div class="header-actions">
+        <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div id="loading-state" class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading your dashboard...</span>
+    </div>
+
+    <div id="dashboard-content" style="display: none;">
+      <div class="welcome-section">
+        <h1 id="welcome-message">Welcome back!</h1>
+        <div class="user-info" id="user-info">Loading account information...</div>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <h2>Subscription Status</h2>
+          <div id="subscription-status" class="subscription-status status-free">Free Plan</div>
+          <div id="subscription-details">
+            <div class="plan-info">
+              <div class="plan-name" id="plan-name">Free Plan</div>
+              <div class="plan-details" id="plan-details">Basic features included</div>
+            </div>
+          </div>
+          <div id="billing-actions">
+            <a href="#" class="button button-primary" id="manage-billing-btn" target="_blank" style="display: none;">
+              Manage Billing
+            </a>
+            <a href="https://get-empath.com/signup?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
+              Upgrade to Pro
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Download Empath</h2>
+          <p>Get the latest version of Empath for your device:</p>
+          
+          <div class="download-links">
+            <a href="https://get-empath.com/download/mac" class="download-link">
+              <svg class="download-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/>
+              </svg>
+              macOS
+            </a>
+            
+            <a href="https://get-empath.com/download/windows" class="download-link">
+              <svg class="download-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z"/>
+              </svg>
+              Windows
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Account Information</h2>
+          <div id="account-details">
+            <p><strong>Email:</strong> <span id="user-email">Loading...</span></p>
+            <p><strong>Member Since:</strong> <span id="member-since">Loading...</span></p>
+            <div id="activation-date" style="display: none;">
+              <p><strong>Subscription Active Since:</strong> <span id="activation-date-text">Loading...</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-state" class="error-message" style="display: none;">
+      Failed to load dashboard. Please try refreshing the page.
+    </div>
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'get-empath.firebaseapp.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+
+    let currentUser = null;
+    let userData = null;
+
+    // Format date helper
+    function formatDate(timestamp) {
+      if (!timestamp) return 'Unknown';
+      
+      let date;
+      if (timestamp.toDate) {
+        date = timestamp.toDate();
+      } else if (timestamp instanceof Date) {
+        date = timestamp;
+      } else {
+        date = new Date(timestamp);
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    // Show loading state
+    function showLoading() {
+      document.getElementById('loading-state').style.display = 'flex';
+      document.getElementById('dashboard-content').style.display = 'none';
+      document.getElementById('error-state').style.display = 'none';
+    }
+
+    // Show dashboard content
+    function showDashboard() {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('dashboard-content').style.display = 'block';
+      document.getElementById('error-state').style.display = 'none';
+    }
+
+    // Show error state
+    function showError() {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('dashboard-content').style.display = 'none';
+      document.getElementById('error-state').style.display = 'block';
+    }
+
+   // Update subscription status display
+    function updateSubscriptionStatus(status, plan) {
+      const statusElement = document.getElementById('subscription-status');
+      const planNameElement = document.getElementById('plan-name');
+      const planDetailsElement = document.getElementById('plan-details');
+      const manageBillingBtn = document.getElementById('manage-billing-btn');
+      const upgradeBtn = document.getElementById('upgrade-btn');
+      const activationDateDiv = document.getElementById('activation-date');
+
+      // Reset classes and visibility
+      statusElement.className = 'subscription-status';
+      manageBillingBtn.style.display = 'none';
+      upgradeBtn.style.display = 'none';
+      activationDateDiv.style.display = 'none';
+
+      switch (status) {
+        case 'free':
+          statusElement.classList.add('status-free');
+          statusElement.textContent = 'Free Plan';
+          planNameElement.textContent = 'Free Plan';
+          planDetailsElement.textContent = 'Basic features included';
+          upgradeBtn.style.display = 'inline-block';
+          break;
+
+        case 'active':
+          statusElement.classList.add('status-active');
+          statusElement.textContent = 'Active';
+          
+          if (plan === 'monthly') {
+            planNameElement.textContent = 'Pro Monthly';
+            planDetailsElement.textContent = '$8.99/month - Full access to all features';
+          } else if (plan === 'annual') {
+            planNameElement.textContent = 'Pro Annual';
+            planDetailsElement.textContent = '$89.99/year - Save 17% with annual billing';
+          } else {
+            planNameElement.textContent = 'Pro Plan';
+            planDetailsElement.textContent = 'Full access to all features';
+          }
+          
+          manageBillingBtn.style.display = 'inline-block';
+          
+          // Show activation date if available
+          if (userData && userData.subscriptionActivatedAt) {
+            activationDateDiv.style.display = 'block';
+            document.getElementById('activation-date-text').textContent = formatDate(userData.subscriptionActivatedAt);
+          }
+          break;
+
+        case 'pending':
+          statusElement.classList.add('status-pending');
+          statusElement.textContent = 'Pending';
+          planNameElement.textContent = 'Subscription Pending';
+          planDetailsElement.textContent = 'Your subscription is being processed';
+          break;
+
+        case 'canceled':
+          statusElement.classList.add('status-canceled');
+          statusElement.textContent = 'Canceled';
+          planNameElement.textContent = 'Subscription Canceled';
+          planDetailsElement.textContent = 'Your subscription has been canceled';
+          upgradeBtn.style.display = 'inline-block';
+          break;
+
+        default:
+          statusElement.classList.add('status-free');
+          statusElement.textContent = 'Unknown Status';
+          planNameElement.textContent = 'Unknown Plan';
+          planDetailsElement.textContent = 'Please contact support';
+      }
+    }
+
+    // Load user data from Firestore
+    async function loadUserData(userId) {
+      try {
+        const userDoc = await firestore.collection('users').doc(userId).get();
+        
+        if (userDoc.exists) {
+          userData = userDoc.data();
+          console.log('User data loaded:', userData);
+          
+          // Update welcome message
+          const displayName = userData.displayName || userData.firstName || 'there';
+          document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
+          
+          // Update user info
+          const email = userData.email || currentUser.email;
+          const memberSince = formatDate(userData.createdAt);
+          
+          document.getElementById('user-info').textContent = `${email} • Member since ${memberSince}`;
+          document.getElementById('user-email').textContent = email;
+          document.getElementById('member-since').textContent = memberSince;
+          
+          // Update subscription status
+          const status = userData.subscriptionStatus || 'free';
+          const plan = userData.plan || 'free';
+          updateSubscriptionStatus(status, plan);
+          
+          // Setup billing management if user has FastSpring customer ID
+          if (userData.fastspringCustomerId && status === 'active') {
+            const manageBillingBtn = document.getElementById('manage-billing-btn');
+            manageBillingBtn.href = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(email)}`;
+          }
+          
+        } else {
+          console.warn('No user document found, creating basic one...');
+          
+          // Create basic user document if it doesn't exist
+          const basicUserData = {
+            email: currentUser.email,
+            displayName: currentUser.displayName || currentUser.email.split('@')[0],
+            subscriptionStatus: 'free',
+            plan: 'free',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          
+          await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+          
+          // Update UI with basic info
+          document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.displayName}!`;
+          document.getElementById('user-info').textContent = `${currentUser.email} • Just joined`;
+          document.getElementById('user-email').textContent = currentUser.email;
+          document.getElementById('member-since').textContent = 'Just joined';
+          
+          updateSubscriptionStatus('free', 'free');
+        }
+        
+        showDashboard();
+        
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showError();
+      }
+    }
+
+    // Authentication state handler
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log('User authenticated:', user.uid);
+        currentUser = user;
+        
+        // Load user data from Firestore
+        await loadUserData(user.uid);
+        
+      } else {
+        console.log('No user authenticated, redirecting to login');
+        window.location.href = '/login';
+      }
+    });
+
+    // Sign out handler
+    document.getElementById('sign-out-btn').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        console.log('User signed out');
+        window.location.href = '/login';
+      } catch (error) {
+        console.error('Sign out error:', error);
+        alert('Failed to sign out. Please try again.');
+      }
+    });
+
+    // Initialize dashboard
+    console.log('Dashboard page loaded');
+    showLoading();
+
+    // Listen for real-time updates to user document
+    let userDocListener = null;
+
+    function setupUserDocumentListener(userId) {
+      if (userDocListener) {
+        userDocListener(); // Unsubscribe previous listener
+      }
+
+      userDocListener = firestore.collection('users').doc(userId).onSnapshot((doc) => {
+        if (doc.exists) {
+          const updatedData = doc.data();
+          
+          // Check if subscription status changed
+          if (userData && updatedData.subscriptionStatus !== userData.subscriptionStatus) {
+            console.log('Subscription status updated:', updatedData.subscriptionStatus);
+            userData = updatedData;
+            
+            const status = userData.subscriptionStatus || 'free';
+            const plan = userData.plan || 'free';
+            updateSubscriptionStatus(status, plan);
+            
+            // Update billing management link if needed
+            if (userData.fastspringCustomerId && status === 'active') {
+              const manageBillingBtn = document.getElementById('manage-billing-btn');
+              manageBillingBtn.href = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(userData.email)}`;
+            }
+          }
+        }
+      }, (error) => {
+        console.error('Error listening to user document updates:', error);
+      });
+    }
+
+    // Setup listener when user is authenticated
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        setupUserDocumentListener(user.uid);
+      } else if (userDocListener) {
+        userDocListener(); // Cleanup listener
+        userDocListener = null;
+      }
+    });
+
+    // Cleanup listener when page unloads
+    window.addEventListener('beforeunload', () => {
+      if (userDocListener) {
+        userDocListener();
+      }
+    });
+  </script>
+</body>
+</html>

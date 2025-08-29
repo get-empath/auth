@@ -19,30 +19,48 @@
       background: white;
       margin: 0;
       padding: 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       min-height: 100vh;
     }
 
-    .container {
-      background: white;
-      padding: 40px;
-      border-radius: 12px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 32px;
+    .logo-container {
+      text-align: center;
+      margin-top: 40px;
+      margin-bottom: 60px;
+    }
+
+    .logo-link {
+      display: inline-block;
+    }
+
+    .logo {
+      height: 60px;
+      width: auto;
+      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.10));
+      opacity: 0.9;
+    }
+
+    .main-container {
+      display: flex;
+      gap: 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .left-content {
+      flex: 0 0 400px;
+      padding: 160px 0px;
     }
 
     h2 {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;  
       margin: 0 0 24px 0;
       color: #1a1a1a;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.4px;
+      font-size: 45px;
+      font-weight: 900;
+      letter-spacing: -0.1rem;
       text-align: center;
+      line-height: 40px;
     }
 
     .plan-toggle {
@@ -90,6 +108,10 @@
       padding: 16px;
       background: #f8f9fa;
       border-radius: 8px;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .plan-name {
@@ -115,27 +137,17 @@
     .back-link {
       text-align: center;
       margin-top: 16px;
-    }
-
-    .back-link a {
-      color: #667eea;
-      text-decoration: none;
-      font-size: 14px;
-    }
-
-    .back-link a:hover {
-      text-decoration: underline;
+      display: none;
     }
 
     .checkout-wrapper {
+      flex: 1;
       background: white;
-      border-radius: 12px;
+      border-radius: 20px;
       border: 1px solid #e1e5e9;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
       min-height: 600px;
-      width: 100%;
-      max-width: 600px;
-      padding: 20px;
+      padding: 30px;
       position: relative;
       overflow: hidden;
     }
@@ -205,8 +217,20 @@
     }
 
     /* Responsive design */
+    @media (max-width: 1024px) {
+      .main-container {
+        flex-direction: column;
+        gap: 24px;
+      }
+      
+      .left-content {
+        flex: none;
+        width: 100%;
+      }
+    }
+
     @media (max-width: 768px) {
-      .container, .checkout-wrapper {
+      .left-content, .checkout-wrapper {
         margin: 0 12px;
         padding: 24px 20px;
         max-width: none;
@@ -220,43 +244,55 @@
         padding: 10px 16px;
         font-size: 13px;
       }
+      
+      .logo {
+        height: 48px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Complete Your Purchase</h2>
-
-    <div id="error-container"></div>
-
-    <div class="plan-toggle">
-      <button class="plan-button active" data-plan="monthly" onclick="switchToMonthly()" id="monthly-btn">
-        Monthly Plan
-      </button>
-      <button class="plan-button" data-plan="annual" onclick="switchToAnnual()" id="annual-btn">
-        Annual Plan
-      </button>
-    </div>
-
-    <div class="plan-details" id="plan-details">
-      <div class="plan-name" id="plan-name">Pro Monthly</div>
-      <div class="plan-price" id="plan-price">$9.99/month</div>
-      <div class="plan-savings" id="plan-savings" style="display: none;"></div>
-    </div>
-
-    <div class="back-link">
-      <a href="/signup">← Back to signup</a>
-    </div>
+  <div class="logo-container">
+    <a href="https://www.get-empath.com" class="logo-link">
+      <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
+    </a>
   </div>
 
-  <div class="checkout-wrapper">
-    <div class="loading-overlay" id="loading-overlay">
-      <div class="spinner"></div>
-      <div class="loading-text" id="loading-text">Switching plans...</div>
+  <div class="main-container">
+    <div class="left-content">
+      <h2>Complete Your Purchase</h2>
+
+      <div id="error-container"></div>
+
+      <div class="plan-toggle">
+        <button class="plan-button active" data-plan="monthly" onclick="switchToMonthly()" id="monthly-btn">
+          Monthly Plan
+        </button>
+        <button class="plan-button" data-plan="annual" onclick="switchToAnnual()" id="annual-btn">
+          Annual Plan
+        </button>
+      </div>
+
+      <div class="plan-details" id="plan-details">
+        <div class="plan-name" id="plan-name">Pro Monthly</div>
+        <div class="plan-price" id="plan-price">$8.99/month</div>
+        <div class="plan-savings" id="plan-savings" style="display: none;"></div>
+      </div>
+
+      <div class="back-link">
+        <a href="/signup">← Back to signup</a>
+      </div>
     </div>
 
-    <!-- FastSpring embedded checkout container -->
-    <div id="fsc-embedded-checkout-container"></div>
+    <div class="checkout-wrapper">
+      <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Switching plans...</div>
+      </div>
+
+      <!-- FastSpring embedded checkout container -->
+      <div id="fsc-embedded-checkout-container"></div>
+    </div>
   </div>
 
   <script>
@@ -267,13 +303,13 @@
     const planConfig = {
       monthly: {
         name: 'Pro Monthly',
-        price: '$9.99/month',
+        price: '$8.99/month',
         savings: null,
         productId: 'empath-monthly'
       },
       annual: {
         name: 'Pro Annual',
-        price: '$99.99/year',
+        price: '$89.99/year',
         savings: 'Save 17% compared to monthly',
         productId: 'empath-annual'
       }

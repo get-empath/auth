@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Empath</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
+      background: white;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 60px;
+      border-radius: 12px;
+      border: 1px solid #e1e5e9;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 20px 0 40px 0;
+      color: #1a1a1a;
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.1rem;
+      line-height: 35px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin: 0px 0px 6px 6px;
+      font-weight: 500;
+      color: #4a5568;
+      font-size: 14px;
+      letter-spacing: -0.4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      box-sizing: border-box;
+      border: 1.5px solid #e9ecef;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+      letter-spacing: -0.2px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #000000;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    button {
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+      min-width: 160px;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .message.error {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+
+    .message.success {
+      color: #16a34a;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .message.info {
+      color: #0066cc;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+
+    .forgot-password {
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .forgot-password a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .signup-link {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e9ecef;
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .signup-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+
+    .progress-indicator {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      display: none;
+    }
+
+    .progress-indicator.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(102, 102, 102, 0.3);
+      border-radius: 50%;
+      border-top-color: #666;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+      
+      .container {
+        padding: 40px 30px;
+      }
+      
+      h1 {
+        font-size: 32px;
+        line-height: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sign In</h1>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <div class="buttons">
+        <button type="submit" id="submit-btn">Sign In</button>
+      </div>
+
+      <div class="progress-indicator" id="progress-indicator">
+        <div class="spinner"></div>
+        Signing in...
+      </div>
+
+      <div class="message" id="form-message"></div>
+
+      <div class="forgot-password">
+        <a href="#" id="forgot-password-link">Forgot your password?</a>
+      </div>
+
+      <div class="signup-link">
+        Don't have an account? <a href="https://get-empath.com/signup">Create one here</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Firebase Configuration - Consider moving to environment variables
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'get-empath.firebaseapp.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+
+    const loginForm = document.getElementById('login-form');
+    const formMessage = document.getElementById('form-message');
+    const submitBtn = document.getElementById('submit-btn');
+    const progressIndicator = document.getElementById('progress-indicator');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+
+    // Check if user is already signed in
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('User already signed in, redirecting to dashboard');
+        window.location.href = '/dashboard';
+      }
+    });
+
+    // Show message helper
+    function showMessage(text, type = 'info') {
+      formMessage.innerHTML = text;
+      formMessage.className = `message ${type}`;
+    }
+
+    // Progress indicator helper
+    function showProgress() {
+      progressIndicator.classList.add('show');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing In...';
+    }
+
+    function hideProgress() {
+      progressIndicator.classList.remove('show');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+
+    // Login form handler
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formMessage.innerHTML = '';
+      
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Basic validation
+      if (!email || !password) {
+        showMessage('Please enter both email and password.', 'error');
+        return;
+      }
+
+      showProgress();
+      console.log('Starting login process for:', email);
+
+      try {
+        // Sign in with Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        console.log('Login successful:', user.uid);
+        showMessage('✅ Login successful! Redirecting...', 'success');
+        
+        // Redirect to dashboard after short delay
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+
+      } catch (error) {
+        hideProgress();
+        console.error('Login error:', error);
+        
+        // Enhanced error handling with user-friendly messages
+        let errorMessage = 'Login failed. Please try again.';
+        
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address. <a href="https://get-empath.com/signup" style="color: #667eea;">Create an account</a>';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password. Please try again or reset your password.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This account has been disabled. Please contact support.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many failed login attempts. Please try again later or reset your password.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection and try again.';
+            break;
+          case 'auth/invalid-credential':
+            errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+            break;
+          default:
+            errorMessage = `Login failed: ${error.message}`;
+        }
+        
+        showMessage(errorMessage, 'error');
+      }
+    });
+
+    // Forgot password handler
+    forgotPasswordLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value.trim();
+      
+      if (!email) {
+        showMessage('Please enter your email address first.', 'info');
+        document.getElementById('email').focus();
+        return;
+      }
+
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showMessage(`Password reset email sent to ${email}. Please check your inbox.`, 'success');
+      } catch (error) {
+        console.error('Password reset error:', error);
+        
+        let errorMessage = 'Failed to send password reset email.';
+        
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many password reset attempts. Please try again later.';
+            break;
+          default:
+            errorMessage = `Password reset failed: ${error.message}`;
+        }
+        
+        showMessage(errorMessage, 'error');
+      }
+    });
+
+    // Focus on email input for better UX
+    document.getElementById('email').focus();
+
+    console.log('Login page loaded');
+  </script>
+</body>
+</html>

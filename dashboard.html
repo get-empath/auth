@@ -824,7 +824,7 @@
           
           // Update welcome message
             const displayName = userData.firstName || 'there';
-            document.getElementById('welcome-message').textContent = `Welcome, ${firstName || 'there'}!`;
+            document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
           
           // Update account information
           const email = userData.email || currentUser.email;
@@ -858,15 +858,15 @@
             createdVia: 'dashboard_auto_create'
           };
           
-          await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
-          userData = basicUserData;
-          
-          // Update UI with basic info
-            document.getElementById('welcome-message').textContent = `Welcome, ${basicUserData.firstName || 'there'}!`;
-          document.getElementById('user-email').textContent = currentUser.email;
-          document.getElementById('first-name-display').textContent = basicUserData.firstName || 'Not set';
-          document.getElementById('last-name-display').textContent = basicUserData.lastName || 'Not set';
-          
+         await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+            userData = basicUserData;
+
+            // Update UI with basic info
+            document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
+            document.getElementById('user-email').textContent = currentUser.email;
+            document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+            document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+                    
           updateSubscriptionStatus('free', 'free');
         }
         

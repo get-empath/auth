@@ -16,10 +16,30 @@
       background: white;
       margin: 0;
       padding: 24px;
+      min-height: 100vh;
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .logo-link {
+      display: inline-block;
+    }
+
+    .logo {
+      height: 60px;
+      width: auto;
+      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.10));
+      opacity: 0.9;
+    }
+
+    .page-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      min-height: calc(100vh - 200px);
     }
 
     .container {
@@ -196,10 +216,6 @@
 
     /* Responsive design */
     @media (max-width: 768px) {
-      body {
-        padding: 12px;
-      }
-      
       .container {
         padding: 40px 30px;
       }
@@ -208,43 +224,55 @@
         font-size: 32px;
         line-height: 30px;
       }
+
+      .logo {
+        height: 48px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Sign In</h1>
+  <div class="logo-container">
+    <a href="https://www.get-empath.com" class="logo-link">
+      <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
+    </a>
+  </div>
 
-    <form id="login-form">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
-      </div>
+  <div class="page-container">
+    <div class="container">
+      <h1>Sign In</h1>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
-      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
+        </div>
 
-      <div class="buttons">
-        <button type="submit" id="submit-btn">Sign In</button>
-      </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
 
-      <div class="progress-indicator" id="progress-indicator">
-        <div class="spinner"></div>
-        Signing in...
-      </div>
+        <div class="buttons">
+          <button type="submit" id="submit-btn">Sign In</button>
+        </div>
 
-      <div class="message" id="form-message"></div>
+        <div class="progress-indicator" id="progress-indicator">
+          <div class="spinner"></div>
+          Signing in...
+        </div>
 
-      <div class="forgot-password">
-        <a href="#" id="forgot-password-link">Forgot your password?</a>
-      </div>
+        <div class="message" id="form-message"></div>
 
-      <div class="signup-link">
-        Don't have an account? <a href="https://get-empath.com/signup">Create one here</a>
-      </div>
-    </form>
+        <div class="forgot-password">
+          <a href="#" id="forgot-password-link">Forgot your password?</a>
+        </div>
+
+        <div class="signup-link">
+          Don't have an account? <a href="https://get-empath.com/signup">Create one here</a>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>

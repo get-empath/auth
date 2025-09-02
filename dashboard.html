@@ -840,7 +840,7 @@
           // Setup billing management if user has FastSpring customer ID
           if (userData.fastspringCustomerId && status === 'active') {
             const manageBillingBtn = document.getElementById('manage-billing-btn');
-            const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(email)}`;
+            const billingUrl = `https://empath.onfastspring.com/account`;
             manageBillingBtn.href = billingUrl;
           }
           

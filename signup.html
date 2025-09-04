@@ -328,13 +328,13 @@
       },
       monthly: {
         name: 'Pro Monthly',
-        price: '$9.99/month',
+        price: '$8.99/month',
         fastspringId: 'empath-monthly',
         description: 'Full access to all features'
       },
       annual: {
         name: 'Pro Annual',
-        price: '$99.99/year',
+        price: '$89.99/year',
         fastspringId: 'empath-annual',
         description: 'Save 17% with annual billing'
       }
@@ -352,11 +352,6 @@
     const formMessage = document.getElementById('form-message');
     const submitBtn = document.getElementById('submit-btn');
     const progressIndicator = document.getElementById('progress-indicator');
-    const planNameEl = document.getElementById('plan-name');
-    const planPriceEl = document.getElementById('plan-price');
-    const switchPlanLink = document.getElementById('switch-plan-link');
-
-    // Initialize plan display - removed since UI elements are gone
 
     // Show message helper
     function showMessage(text, type = 'info') {
@@ -461,30 +456,24 @@
           }, 2000);
           
         } else {
-          const config = planConfigs[currentPlan];
-          if (config && config.fastspringId) {
-            // Enhanced checkout URL with better parameters
-            const checkoutParams = new URLSearchParams({
-              email: user.email,
-              userId: user.uid,
-              displayName: userData.displayName,
-              plan: currentPlan,
-              source: 'web_signup'
-            });
-            
-            const checkoutUrl = `https://empath.onfastspring.com/popup-${config.fastspringId}?${checkoutParams.toString()}`;
-            
-            showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
-            console.log('Paid plan - redirecting to FastSpring:', checkoutUrl);
-            
-            // Shorter delay for better UX
-            setTimeout(() => {
-              window.location.href = checkoutUrl;
-            }, 1500);
-          } else {
-            console.error('Invalid plan configuration:', currentPlan);
-            showMessage('Plan configuration error. Please try again or contact support.', 'error');
-          }
+          // Redirect to custom checkout page instead of FastSpring popup
+          const checkoutParams = new URLSearchParams({
+            email: user.email,
+            userId: user.uid,
+            displayName: userData.displayName,
+            plan: currentPlan,
+            source: 'web_signup'
+          });
+          
+          const checkoutUrl = `https://auth.get-empath.com/checkout?${checkoutParams.toString()}`;
+          
+          showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
+          console.log('Paid plan - redirecting to custom checkout:', checkoutUrl);
+          
+          // Shorter delay for better UX
+          setTimeout(() => {
+            window.location.href = checkoutUrl;
+          }, 1500);
         }
 
       } catch (error) {

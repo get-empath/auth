@@ -564,20 +564,6 @@
     let retryAttempts = 0;
     const maxRetryAttempts = 3;
 
-    // Connection status monitoring
-    function updateConnectionStatus(online) {
-      const statusEl = document.getElementById('connection-status');
-      isOffline = !online;
-      
-      if (online) {
-        statusEl.textContent = 'Online';
-        statusEl.className = 'connection-status connection-online';
-      } else {
-        statusEl.textContent = 'Offline';
-        statusEl.className = 'connection-status connection-offline';
-      }
-    }
-
     // Monitor network status
     window.addEventListener('online', () => updateConnectionStatus(true));
     window.addEventListener('offline', () => updateConnectionStatus(false));

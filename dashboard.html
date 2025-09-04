@@ -256,30 +256,6 @@
       margin: 20px 0;
     }
 
-    .connection-status {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      z-index: 1000;
-      transition: all 0.3s ease;
-    }
-
-    .connection-online {
-      background: #d1e7dd;
-      color: #0f5132;
-    }
-
-    .connection-offline {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
     .retry-button {
       background: #667eea;
       color: white;
@@ -397,13 +373,6 @@
       
       .cards-grid {
         grid-template-columns: 1fr;
-      }
-      
-      .connection-status {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-bottom: 20px;
       }
 
       .info-row {
@@ -560,14 +529,14 @@
 
     let currentUser = null;
     let userData = null;
-    let isOffline = false;
     let retryAttempts = 0;
     const maxRetryAttempts = 3;
 
-    // Monitor network status
-    window.addEventListener('online', () => updateConnectionStatus(true));
-    window.addEventListener('offline', () => updateConnectionStatus(false));
-    updateConnectionStatus(navigator.onLine);
+    // Monitor network status (simplified)
+    // Initialize after DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dashboard is ready
+    });
 
     // Format date helper
     function formatDate(timestamp) {
@@ -634,7 +603,7 @@
       activationDateDiv.style.display = 'none';
 
       // Handle offline state
-      if (isOffline && !status) {
+      if (!navigator.onLine && !status) {
         statusElement.classList.add('status-offline');
         statusElement.textContent = 'Offline';
         planNameElement.textContent = 'Unable to load';
@@ -862,7 +831,6 @@
         
         // Handle different error types
         if (error.code === 'unavailable' || error.message.includes('offline')) {
-          updateConnectionStatus(false);
           
           if (retryAttempts < maxRetryAttempts) {
             setTimeout(() => {
@@ -985,10 +953,6 @@
         }
       }, (error) => {
         console.error('Real-time listener error:', error);
-        
-        if (error.code === 'unavailable') {
-          updateConnectionStatus(false);
-        }
       });
     }
 
@@ -1009,10 +973,8 @@
       }
     });
 
-    // Network status change handlers
+    // Network status change handlers (simplified)
     window.addEventListener('online', () => {
-      updateConnectionStatus(true);
-      
       // Retry loading data if we're in an error state and have a user
       if (currentUser && (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0)) {
         retryAttempts = 0;
@@ -1023,22 +985,8 @@
     });
 
     window.addEventListener('offline', () => {
-      updateConnectionStatus(false);
+      // Handle offline state
     });
-
-    // Periodic connection check (every 30 seconds)
-    setInterval(() => {
-      const wasOffline = isOffline;
-      updateConnectionStatus(navigator.onLine);
-      
-      if (wasOffline && navigator.onLine && currentUser) {
-        // Only retry if we were in an error state
-        if (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0) {
-          retryAttempts = 0;
-          loadUserData(currentUser.uid, true);
-        }
-      }
-    }, 30000);
 
     // Error reporting for debugging
     window.addEventListener('error', (event) => {

@@ -551,9 +551,25 @@
           if (msg.action === 'event' && msg.eventData) {
             // Handle checkout events
             if (msg.eventData.event === 'FSC-checkoutComplete') {
+              console.log('Checkout completed, redirecting to download page...');
               showSuccess('Purchase completed successfully! Redirecting...');
+              
+              // Try multiple redirect methods for better browser compatibility
               setTimeout(() => {
-                window.location.href = 'https://get-empath.com/download';
+                try {
+                  // Primary redirect method
+                  window.location.href = 'https://www.get-empath.com/download';
+                } catch (error) {
+                  console.error('Primary redirect failed:', error);
+                  // Fallback redirect method
+                  try {
+                    window.location.replace('https://www.get-empath.com/download');
+                  } catch (fallbackError) {
+                    console.error('Fallback redirect failed:', fallbackError);
+                    // Final fallback - open in new window
+                    window.open('https://www.get-empath.com/download', '_top');
+                  }
+                }
               }, 2000);
             }
           }

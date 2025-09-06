@@ -22,7 +22,7 @@
     .logo-container {
       text-align: center;
       margin-top: 30px;
-      margin-bottom: 20px;
+      margin-bottom: 80px;
     }
 
     .logo-link {
@@ -39,8 +39,65 @@
     .page-container {
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: calc(100vh - 200px);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 60px;
+      max-width: 1200px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .social-proof {
+      color: #4a5568;
+    }
+
+    .social-proof h2 {
+      font-size: 32px;
+      font-weight: 900;
+      color: #1a1a1a;
+      margin-bottom: 36px;
+      letter-spacing: -0.1rem;
+      line-height: 1.1;
+    }
+
+    .hero-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .hero-features div {
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 500;
+      color: #4a5568;
+    }
+
+    .checkmark {
+      color: #000000;
+      font-weight: 700;
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    .testimonial {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      font-size: 15px;
+      color: #374151;
+      line-height: 1.5;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      font-style: italic;
     }
 
     .container {
@@ -243,6 +300,20 @@
       .logo {
         height: 48px;
       }
+
+      .main-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .social-proof h2 {
+        font-size: 28px !important;
+      }
+
+      .hero-features {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
     }
   </style>
 </head>
@@ -254,51 +325,80 @@
   </div>
 
   <div class="page-container">
-    <div class="container">
-      <h1>Create Your Account</h1>
-
-      <form id="signup-form">
-        <div class="form-group">
-          <label for="first-name">First Name</label>
-          <input type="text" id="first-name" required placeholder="Simon">
+    <div class="main-layout">
+      <div class="social-proof">
+        <h2>Get started for free.</h2>
+        
+        <div class="hero-features">
+          <div><span class="checkmark">✓</span> Launch Devices in Seconds</div>
+          <div><span class="checkmark">✓</span> Screenshots with Zero Effort</div>
+          <div><span class="checkmark">✓</span> Analyze Competitors' Apps</div>
+          <div><span class="checkmark">✓</span> iOS & Android Bookmarks</div>
+          <div><span class="checkmark">✓</span> Built-in Password Manager</div>
+          <div><span class="checkmark">✓</span> Set Any GPS Location</div>
+          <div><span class="checkmark">✓</span> Batch Capture Competitors</div>
+          <div><span class="checkmark">✓</span> Frame Customization</div>
         </div>
 
-        <div class="form-group">
-          <label for="last-name">Last Name</label>
-          <input type="text" id="last-name" required placeholder="Sinek">
+        <div class="testimonial">
+          "Empath is my always-on companion — I audit key flows in seconds. It's my fastest path to product truth.""
         </div>
 
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" required placeholder="teamsimon@simonsinek.com">
+        <div class="testimonial">
+          "We updated all of our onboarding and sales decks in minutes! It would have taken hours without Empath."
         </div>
 
-        <div class="form-group">
-          <label for="password">Password <span style="color: #6c757d; font-weight: 400;">(minimum 6 characters)</span></label>
-          <input type="password" id="password" required placeholder="••••••••" minlength="6">
+        <div class="testimonial">
+          "Empath gives our team instant access to the app — no engineering support needed."
         </div>
+      </div>
 
-        <div class="form-group">
-          <label for="confirm-password">Confirm Password</label>
-          <input type="password" id="confirm-password" required placeholder="••••••••" minlength="6">
-        </div>
+      <div class="container">
+        <h1>Create Your Account</h1>
 
-        <div class="buttons">
-          <button type="submit" id="submit-btn">Create Account</button>
-        </div>
+        <form id="signup-form">
+          <div class="form-group">
+            <label for="first-name">First Name</label>
+            <input type="text" id="first-name" required placeholder="Simon">
+          </div>
 
-        <div class="progress-indicator" id="progress-indicator">
-          <div class="spinner"></div>
-          Creating account...
-        </div>
+          <div class="form-group">
+            <label for="last-name">Last Name</label>
+            <input type="text" id="last-name" required placeholder="Sinek">
+          </div>
 
-        <div class="message" id="form-message"></div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required placeholder="teamsimon@simonsinek.com">
+          </div>
 
-        <div class="tos">
-          By creating an account, you agree to our
-          <a href="https://get-empath.com/terms-of-service" target="_blank">Terms of Service</a>.
-        </div>
-      </form>
+          <div class="form-group">
+            <label for="password">Password <span style="color: #6c757d; font-weight: 400;">(minimum 6 characters)</span></label>
+            <input type="password" id="password" required placeholder="••••••••" minlength="6">
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" required placeholder="••••••••" minlength="6">
+          </div>
+
+          <div class="buttons">
+            <button type="submit" id="submit-btn">Create Account</button>
+          </div>
+
+          <div class="progress-indicator" id="progress-indicator">
+            <div class="spinner"></div>
+            Creating account...
+          </div>
+
+          <div class="message" id="form-message"></div>
+
+          <div class="tos">
+            By creating an account, you agree to our
+            <a href="https://get-empath.com/terms-of-service" target="_blank">Terms of Service</a>.
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 

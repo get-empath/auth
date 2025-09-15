@@ -757,117 +757,192 @@
 
     // Load user data from Firestore with retry logic
     async function loadUserData(userId, isRetry = false) {
-      const attemptNumber = retryAttempts + 1;
+  const attemptNumber = retryAttempts + 1;
+  
+  // Enhanced logging for debugging
+  console.log('=== Loading user data ===');
+  console.log('User ID:', userId);
+  console.log('Current user:', currentUser ? currentUser.uid : 'null');
+  console.log('Auth state:', auth.currentUser ? 'authenticated' : 'not authenticated');
+  console.log('Is retry:', isRetry);
+  console.log('Retry attempt:', attemptNumber);
+  console.log('Online status:', navigator.onLine);
+  
+  if (isRetry) {
+    showLoading('Retrying data load...');
+  }
+
+  try {
+    // Verify authentication state before proceeding
+    if (!auth.currentUser) {
+      throw new Error('User not authenticated - auth.currentUser is null');
+    }
+    
+    if (auth.currentUser.uid !== userId) {
+      throw new Error(`UID mismatch: auth.currentUser.uid (${auth.currentUser.uid}) !== userId (${userId})`);
+    }
+
+    console.log('Making Firestore request for user:', userId);
+    console.log('Auth token exists:', !!auth.currentUser.accessToken);
+    
+    // Add timeout to detect hanging requests
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Firestore request timeout after 10 seconds')), 10000);
+    });
+
+    const userDocPromise = firestore.collection('users').doc(userId).get();
+    const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+    
+    console.log('Firestore response received');
+    console.log('Document exists:', userDoc.exists);
+    console.log('Document metadata:', userDoc.metadata);
+    
+    if (userDoc.exists) {
+      const docData = userDoc.data();
+      console.log('Document data:', docData);
+      console.log('Document keys:', Object.keys(docData || {}));
       
-      if (isRetry) {
-        showLoading('Retrying data load...');
+      userData = docData;
+      
+      // Update welcome message
+      const displayName = userData.firstName || 'there';
+      document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
+      
+      // Update account information
+      const email = userData.email || currentUser.email;
+      document.getElementById('user-email').textContent = email;
+      document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+      document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+      
+      // Update subscription status
+      const status = userData.subscriptionStatus || 'free';
+      const plan = userData.plan || 'free';
+      console.log('Subscription status:', status, 'Plan:', plan);
+      updateSubscriptionStatus(status, plan);
+      
+      // Setup billing management if user has FastSpring customer ID
+      if (userData.fastspringCustomerId && status === 'active') {
+        const manageBillingBtn = document.getElementById('manage-billing-btn');
+        const billingUrl = `https://empath.onfastspring.com/account`;
+        manageBillingBtn.href = billingUrl;
+        console.log('Billing management setup for customer:', userData.fastspringCustomerId);
       }
+      
+      retryAttempts = 0; // Reset retry counter on success
+      console.log('User data loaded successfully');
+      
+    } else {
+      console.log('Document does not exist, creating new user document');
+      
+      // Create basic user document if it doesn't exist
+      const basicUserData = {
+        email: currentUser.email,
+        firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
+        lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
+        subscriptionStatus: 'free',
+        plan: 'free',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdVia: 'dashboard_auto_create',
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      console.log('Creating user document with data:', basicUserData);
+      
+      await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+      userData = basicUserData;
 
-      try {
-        // Add timeout to detect hanging requests
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Firestore request timeout after 10 seconds')), 10000);
-        });
-
-        const userDocPromise = firestore.collection('users').doc(userId).get();
-        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+      // Update UI with basic info
+      document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
+      document.getElementById('user-email').textContent = currentUser.email;
+      document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+      document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+                  
+      updateSubscriptionStatus('free', 'free');
+      console.log('New user document created successfully');
+    }
+    
+    showDashboard();
+    console.log('=== User data loading completed successfully ===');
+    
+  } catch (error) {
+    console.error('=== Error loading user data ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('User ID that failed:', userId);
+    console.error('Auth current user:', auth.currentUser ? auth.currentUser.uid : 'null');
+    console.error('Retry attempts so far:', retryAttempts);
+    console.error('Max retry attempts:', maxRetryAttempts);
+    console.error('Navigator online:', navigator.onLine);
+    
+    retryAttempts++;
+    
+    // Handle different error types with specific logic
+    if (error.code === 'permission-denied') {
+      console.error('Permission denied - likely Firestore security rules issue');
+      showError('Access denied. Please sign out and sign in again, or contact support if this persists.');
+      
+    } else if (error.code === 'unavailable' || error.message.includes('offline')) {
+      console.error('Firestore unavailable or offline');
+      
+      if (retryAttempts < maxRetryAttempts) {
+        console.log(`Retrying in 3 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+        setTimeout(() => {
+          loadUserData(userId, true);
+        }, 3000);
+      } else {
+        showError('Unable to connect to our servers. Please check your internet connection.');
+        updateSubscriptionStatus(null, null); // Show offline state
         
-        if (userDoc.exists) {
-          userData = userDoc.data();
-          
-          // Update welcome message
-            const displayName = userData.firstName || 'there';
-            document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
-          
-          // Update account information
-          const email = userData.email || currentUser.email;
-          document.getElementById('user-email').textContent = email;
-          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-          
-          // Update subscription status
-          const status = userData.subscriptionStatus || 'free';
-          const plan = userData.plan || 'free';
-          updateSubscriptionStatus(status, plan);
-          
-          // Setup billing management if user has FastSpring customer ID
-          if (userData.fastspringCustomerId && status === 'active') {
-            const manageBillingBtn = document.getElementById('manage-billing-btn');
-            const billingUrl = `https://empath.onfastspring.com/account`;
-            manageBillingBtn.href = billingUrl;
-          }
-          
-          retryAttempts = 0; // Reset retry counter on success
-          
-        } else {
-          // Create basic user document if it doesn't exist
-          const basicUserData = {
-            email: currentUser.email,
-            firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
-            lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
-            subscriptionStatus: 'free',
-            plan: 'free',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdVia: 'dashboard_auto_create'
-          };
-          
-         await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
-            userData = basicUserData;
-
-            // Update UI with basic info
-            document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
-            document.getElementById('user-email').textContent = currentUser.email;
-            document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-            document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-                    
-          updateSubscriptionStatus('free', 'free');
-        }
-        
+        // Show dashboard with limited info from Firebase Auth
+        document.getElementById('welcome-message').textContent = `Welcome back!`;
+        document.getElementById('user-email').textContent = currentUser.email;
+        document.getElementById('first-name-display').textContent = 'Unable to load';
+        document.getElementById('last-name-display').textContent = 'Unable to load';
         showDashboard();
-        
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        retryAttempts++;
-        
-        // Handle different error types
-        if (error.code === 'unavailable' || error.message.includes('offline')) {
-          
-          if (retryAttempts < maxRetryAttempts) {
-            setTimeout(() => {
-              loadUserData(userId, true);
-            }, 3000);
-          } else {
-            showError('Unable to connect to our servers. Please check your internet connection.');
-            updateSubscriptionStatus(null, null); // Show offline state
-            
-            // Show dashboard with limited info from Firebase Auth
-            document.getElementById('welcome-message').textContent = `Welcome back!`;
-            document.getElementById('user-email').textContent = currentUser.email;
-            document.getElementById('first-name-display').textContent = 'Unable to load';
-            document.getElementById('last-name-display').textContent = 'Unable to load';
-            showDashboard();
-          }
-        } else if (error.message.includes('timeout')) {
-          if (retryAttempts < maxRetryAttempts) {
-            setTimeout(() => {
-              loadUserData(userId, true);
-            }, 2000);
-          } else {
-            showError('Server response timeout. Please try again later.');
-          }
-        } else if (error.code === 'permission-denied') {
-          showError('Access denied. Please sign out and sign in again.');
-        } else {
-          if (retryAttempts < maxRetryAttempts) {
-            setTimeout(() => {
-              loadUserData(userId, true);
-            }, 2000);
-          } else {
-            showError(`Failed to load account data: ${error.message}`);
-          }
-        }
+      }
+      
+    } else if (error.message.includes('timeout')) {
+      console.error('Request timeout');
+      
+      if (retryAttempts < maxRetryAttempts) {
+        console.log(`Retrying after timeout in 2 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+        setTimeout(() => {
+          loadUserData(userId, true);
+        }, 2000);
+      } else {
+        showError('Server response timeout. Please try again later.');
+      }
+      
+    } else if (error.code === 'unauthenticated') {
+      console.error('User unauthenticated - redirecting to login');
+      auth.signOut().then(() => {
+        window.location.href = '/login';
+      });
+      
+    } else if (error.message.includes('UID mismatch')) {
+      console.error('UID mismatch detected - signing out');
+      auth.signOut().then(() => {
+        window.location.href = '/login';
+      });
+      
+    } else {
+      console.error('Unknown error type');
+      
+      if (retryAttempts < maxRetryAttempts) {
+        console.log(`Retrying unknown error in 2 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+        setTimeout(() => {
+          loadUserData(userId, true);
+        }, 2000);
+      } else {
+        showError(`Failed to load account data: ${error.message}`);
       }
     }
+    
+    console.error('=== End error handling ===');
+  }
+}
 
     // Manual retry function
     function retryLoadUserData() {

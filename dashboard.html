@@ -58,6 +58,11 @@
       border-color: #dee2e6;
     }
 
+    .sign-out-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .main-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -531,12 +536,7 @@
     let userData = null;
     let retryAttempts = 0;
     const maxRetryAttempts = 3;
-
-    // Monitor network status (simplified)
-    // Initialize after DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      // Dashboard is ready
-    });
+    let userDocListener = null;
 
     // Format date helper
     function formatDate(timestamp) {
@@ -625,7 +625,7 @@
             const upgradeParams = new URLSearchParams({
               email: userData.email || currentUser.email,
               userId: currentUser.uid,
-                displayName: userData.firstName || currentUser.email.split('@')[0],
+              displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_upgrade'
             });
@@ -676,7 +676,7 @@
             const upgradeParams = new URLSearchParams({
               email: userData.email || currentUser.email,
               userId: currentUser.uid,
-                displayName: userData.firstName || currentUser.email.split('@')[0],
+              displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_reactivate'
             });
@@ -736,7 +736,7 @@
       try {
         // Update Firestore
         await firestore.collection('users').doc(currentUser.uid).update({
-        [fieldName]: newValue
+          [fieldName]: newValue
         });
 
         // Update local data and UI
@@ -755,208 +755,119 @@
       }
     }
 
-    // Load user data from Firestore with retry logic
+    // Load user data from Firestore with enhanced debugging
     async function loadUserData(userId, isRetry = false) {
-  const attemptNumber = retryAttempts + 1;
-  
-  console.log('=== Loading user data ===');
-  console.log('User ID:', userId);
-  console.log('Is retry:', isRetry);
-  console.log('Retry attempt:', attemptNumber);
-  
-  if (isRetry) {
-    showLoading('Retrying data load...');
-    
-    // On retry, refresh auth token and test connection
-    const tokenRefreshed = await refreshAuthToken();
-    console.log('Auth token refresh result:', tokenRefreshed);
-    
-    const connectionOk = await testFirestoreConnection();
-    console.log('Firestore connection test result:', connectionOk);
-    
-    if (!connectionOk) {
-      throw new Error('Firestore connection test failed');
-    }
-  }
-
-  try {
-    if (!auth.currentUser) {
-      throw new Error('User not authenticated');
-    }
-    
-    console.log('Making Firestore request...');
-    
-    // Try alternative method first on retries
-    let userDoc;
-    if (isRetry && retryAttempts > 1) {
-      console.log('Using alternative Firestore access method...');
-      userDoc = await loadUserDataAlternative(userId);
-    } else {
-      // Standard method with shorter timeout on retries
-      const timeoutDuration = isRetry ? 5000 : 10000;
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Firestore request timeout after ${timeoutDuration/1000} seconds`)), timeoutDuration);
-      });
-
-      const userDocPromise = firestore.collection('users').doc(userId).get();
-      userDoc = await Promise.race([userDocPromise, timeoutPromise]);
-    }
-    
-    console.log('Firestore response received, document exists:', userDoc.exists);
-    
-    if (userDoc.exists) {
-      userData = userDoc.data();
-      console.log('Document data loaded successfully');
+      const attemptNumber = retryAttempts + 1;
       
-      // Update UI
-      const displayName = userData.firstName || 'there';
-      document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
+      console.log('=== Loading user data ===');
+      console.log('User ID:', userId);
+      console.log('Is retry:', isRetry);
+      console.log('Retry attempt:', attemptNumber);
       
-      const email = userData.email || currentUser.email;
-      document.getElementById('user-email').textContent = email;
-      document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-      document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-      
-      const status = userData.subscriptionStatus || 'free';
-      const plan = userData.plan || 'free';
-      updateSubscriptionStatus(status, plan);
-      
-      if (userData.fastspringCustomerId && status === 'active') {
-        const manageBillingBtn = document.getElementById('manage-billing-btn');
-        manageBillingBtn.href = 'https://empath.onfastspring.com/account';
+      if (isRetry) {
+        showLoading('Retrying data load...');
       }
-      
-      retryAttempts = 0;
-      
-    } else {
-      console.log('Document does not exist, creating new one...');
-      
-      const basicUserData = {
-        email: currentUser.email,
-        firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
-        lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
-        subscriptionStatus: 'free',
-        plan: 'free',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdVia: 'dashboard_timeout_recovery',
-        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      
-      // Try to create with shorter timeout
-      const createPromise = firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
-      const createTimeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Document creation timeout')), 5000);
-      });
-      
-      await Promise.race([createPromise, createTimeout]);
-      userData = basicUserData;
-      
-      document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
-      document.getElementById('user-email').textContent = currentUser.email;
-      document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-      document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-      updateSubscriptionStatus('free', 'free');
-    }
-    
-    showDashboard();
-    console.log('=== User data loading completed successfully ===');
-    
-  } catch (error) {
-    console.error('=== Error loading user data ===');
-    console.error('Error:', error.message);
-    
-    retryAttempts++;
-    
-    if (error.message.includes('timeout')) {
-      if (retryAttempts < maxRetryAttempts) {
-        console.log(`Retrying after timeout (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
-        // Exponential backoff: 3s, 6s, 12s
-        const delay = Math.min(3000 * Math.pow(2, retryAttempts - 1), 12000);
-        setTimeout(() => {
-          loadUserData(userId, true);
-        }, delay);
-      } else {
-        // Final fallback: create minimal dashboard
-        console.log('Max retries reached, showing fallback dashboard');
-        showMinimalDashboard();
+
+      try {
+        if (!auth.currentUser) {
+          throw new Error('User not authenticated');
+        }
+
+        console.log('Making Firestore request...');
+        
+        // Use shorter timeout on retries
+        const timeoutDuration = isRetry ? 7000 : 10000;
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Firestore request timeout after ${timeoutDuration/1000} seconds`)), timeoutDuration);
+        });
+
+        const userDocPromise = firestore.collection('users').doc(userId).get();
+        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
+        
+        console.log('Firestore response received, document exists:', userDoc.exists);
+        
+        if (userDoc.exists) {
+          userData = userDoc.data();
+          console.log('Document data loaded successfully');
+          
+          // Update UI
+          const displayName = userData.firstName || 'there';
+          document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
+          
+          const email = userData.email || currentUser.email;
+          document.getElementById('user-email').textContent = email;
+          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+          
+          const status = userData.subscriptionStatus || 'free';
+          const plan = userData.plan || 'free';
+          updateSubscriptionStatus(status, plan);
+          
+          if (userData.fastspringCustomerId && status === 'active') {
+            const manageBillingBtn = document.getElementById('manage-billing-btn');
+            manageBillingBtn.href = 'https://empath.onfastspring.com/account';
+          }
+          
+          retryAttempts = 0;
+          
+        } else {
+          console.log('Document does not exist, creating new one...');
+          
+          const basicUserData = {
+            email: currentUser.email,
+            firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
+            lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
+            subscriptionStatus: 'free',
+            plan: 'free',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdVia: 'dashboard_auto_create',
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          
+          await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+          userData = basicUserData;
+          
+          document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
+          document.getElementById('user-email').textContent = currentUser.email;
+          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
+          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
+          updateSubscriptionStatus('free', 'free');
+        }
+        
+        showDashboard();
+        console.log('=== User data loading completed successfully ===');
+        
+      } catch (error) {
+        console.error('=== Error loading user data ===');
+        console.error('Error:', error.message);
+        
+        retryAttempts++;
+        
+        if (error.message.includes('timeout')) {
+          if (retryAttempts < maxRetryAttempts) {
+            console.log(`Retrying after timeout (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+            const delay = Math.min(3000 * Math.pow(2, retryAttempts - 1), 8000);
+            setTimeout(() => {
+              loadUserData(userId, true);
+            }, delay);
+          } else {
+            showError('Server response timeout. Please try refreshing the page.');
+          }
+        } else if (error.code === 'permission-denied') {
+          showError('Access denied. Please sign out and sign in again.');
+        } else if (error.code === 'unavailable') {
+          if (retryAttempts < maxRetryAttempts) {
+            setTimeout(() => {
+              loadUserData(userId, true);
+            }, 3000);
+          } else {
+            showError('Unable to connect to our servers. Please check your internet connection.');
+          }
+        } else {
+          showError(`Failed to load account data: ${error.message}`);
+        }
       }
-    } else {
-      showError(`Failed to load account data: ${error.message}`);
     }
-  }
-}
-
-function showMinimalDashboard() {
-  console.log('Showing minimal dashboard due to persistent connection issues');
-  
-  // Set basic user info from auth
-  document.getElementById('welcome-message').textContent = 'Welcome back!';
-  document.getElementById('user-email').textContent = currentUser.email;
-  document.getElementById('first-name-display').textContent = 'Connection issue';
-  document.getElementById('last-name-display').textContent = 'Connection issue';
-  
-  // Show free plan status
-  updateSubscriptionStatus('free', 'free');
-  
-  // Show dashboard with a connection warning
-  showDashboard();
-  
-  // Add a notice about the connection issue
-  const warningDiv = document.createElement('div');
-  warningDiv.className = 'error-message';
-  warningDiv.innerHTML = `
-    <div>Connection issue detected. Some features may not work properly.</div>
-    <button class="retry-button" onclick="location.reload()">Refresh Page</button>
-  `;
-  document.querySelector('.main-container').insertBefore(warningDiv, document.querySelector('.cards-grid'));
-}
-
-async function refreshAuthToken() {
-  try {
-    console.log('Refreshing auth token...');
-    const user = auth.currentUser;
-    if (user) {
-      await user.getIdToken(true); // Force refresh
-      console.log('Auth token refreshed successfully');
-      return true;
-    }
-  } catch (error) {
-    console.error('Failed to refresh auth token:', error);
-    return false;
-  }
-  return false;
-}
-
-// Test Firestore connectivity with a simple operation
-async function testFirestoreConnection() {
-  try {
-    console.log('Testing Firestore connection...');
-    const testDoc = await firestore.collection('_test').doc('connection').get();
-    console.log('Firestore connection test successful');
-    return true;
-  } catch (error) {
-    console.error('Firestore connection test failed:', error);
-    return false;
-  }
-}
-
-// Alternative document access method
-async function loadUserDataAlternative(userId) {
-  try {
-    console.log('Trying alternative Firestore access method...');
-    
-    // Try with explicit source options
-    const userDoc = await firestore.collection('users').doc(userId).get({
-      source: 'server' // Force server read, bypass cache
-    });
-    
-    console.log('Alternative method successful, document exists:', userDoc.exists);
-    return userDoc;
-  } catch (error) {
-    console.error('Alternative method failed:', error);
-    throw error;
-  }
-}
 
     // Manual retry function
     function retryLoadUserData() {
@@ -966,57 +877,86 @@ async function loadUserDataAlternative(userId) {
       }
     }
 
+    // Clean sign out function
+    async function cleanSignOut() {
+      try {
+        console.log('Starting sign out process...');
+        
+        const btn = document.getElementById('sign-out-btn');
+        btn.textContent = 'Signing Out...';
+        btn.disabled = true;
+        
+        // Remove real-time listeners
+        if (userDocListener) {
+          console.log('Removing Firestore listener...');
+          userDocListener();
+          userDocListener = null;
+        }
+        
+        // Clear Firestore cache if possible
+        try {
+          await firestore.clearPersistence();
+          console.log('Firestore cache cleared');
+        } catch (error) {
+          console.log('Firestore cache clear skipped (app in use):', error.message);
+        }
+        
+        // Sign out from Firebase Auth
+        console.log('Signing out from Firebase Auth...');
+        await auth.signOut();
+        
+        // Clear local storage items related to Firebase
+        try {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('firebase:') || key.startsWith('firebaseui'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          console.log('Firebase localStorage items cleared');
+        } catch (error) {
+          console.log('localStorage clearing failed:', error.message);
+        }
+        
+        console.log('Sign out completed successfully');
+        
+        // Redirect to login
+        window.location.href = '/login';
+        
+      } catch (error) {
+        console.error('Error during sign out:', error);
+        
+        // Force navigation even if cleanup failed
+        window.location.href = '/login';
+      }
+    }
+
     // Authentication state handler
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         currentUser = user;
         retryAttempts = 0;
-        
-        // Load user data from Firestore
         await loadUserData(user.uid);
-        
+        setupUserDocumentListener(user.uid);
       } else {
         window.location.href = '/login';
       }
     });
 
-    // Sign out handler
-    document.getElementById('sign-out-btn').addEventListener('click', async () => {
-      try {
-        await auth.signOut();
-        window.location.href = '/login';
-      } catch (error) {
-        console.error('Sign out error:', error);
-        alert('Failed to sign out. Please try again.');
-      }
-    });
-
-    // Retry button handlers
-    document.getElementById('retry-btn').addEventListener('click', () => {
-      retryLoadUserData();
-    });
-
-    document.getElementById('retry-data-btn').addEventListener('click', () => {
-      retryLoadUserData();
-    });
-
-    // Initialize dashboard
-    showLoading();
-
-    // Listen for real-time updates to user document
-    let userDocListener = null;
-
+    // Setup real-time listener for user document
     function setupUserDocumentListener(userId) {
       if (userDocListener) {
         userDocListener(); // Unsubscribe previous listener
       }
 
       userDocListener = firestore.collection('users').doc(userId).onSnapshot((doc) => {
-        if (doc.exists) {
+        if (doc.exists && userData) {
           const updatedData = doc.data();
           
           // Check if subscription status changed
-          if (userData && updatedData.subscriptionStatus !== userData.subscriptionStatus) {
+          if (updatedData.subscriptionStatus !== userData.subscriptionStatus) {
             userData = updatedData;
             
             const status = userData.subscriptionStatus || 'free';
@@ -1026,8 +966,7 @@ async function loadUserDataAlternative(userId) {
             // Update billing management link if needed
             if (userData.fastspringCustomerId && status === 'active') {
               const manageBillingBtn = document.getElementById('manage-billing-btn');
-              const billingUrl = `https://empath.onfastspring.com/account/authenticate?email=${encodeURIComponent(userData.email)}`;
-              manageBillingBtn.href = billingUrl;
+              manageBillingBtn.href = 'https://empath.onfastspring.com/account';
             }
           } else if (userData) {
             // Update other fields that might have changed
@@ -1045,15 +984,10 @@ async function loadUserDataAlternative(userId) {
       });
     }
 
-    // Setup listener when user is authenticated
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        setupUserDocumentListener(user.uid);
-      } else if (userDocListener) {
-        userDocListener(); // Cleanup listener
-        userDocListener = null;
-      }
-    });
+    // Event listeners
+    document.getElementById('sign-out-btn').addEventListener('click', cleanSignOut);
+    document.getElementById('retry-btn').addEventListener('click', retryLoadUserData);
+    document.getElementById('retry-data-btn').addEventListener('click', retryLoadUserData);
 
     // Cleanup listener when page unloads
     window.addEventListener('beforeunload', () => {
@@ -1062,10 +996,9 @@ async function loadUserDataAlternative(userId) {
       }
     });
 
-    // Network status change handlers (simplified)
+    // Network status handlers
     window.addEventListener('online', () => {
-      // Retry loading data if we're in an error state and have a user
-      if (currentUser && (document.getElementById('error-state').style.display !== 'none' || retryAttempts > 0)) {
+      if (currentUser && retryAttempts > 0) {
         retryAttempts = 0;
         setTimeout(() => {
           loadUserData(currentUser.uid, true);
@@ -1073,18 +1006,8 @@ async function loadUserDataAlternative(userId) {
       }
     });
 
-    window.addEventListener('offline', () => {
-      // Handle offline state
-    });
-
-    // Error reporting for debugging
-    window.addEventListener('error', (event) => {
-      console.error(`Global error: ${event.message} at ${event.filename}:${event.lineno}`);
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      console.error(`Unhandled promise rejection: ${event.reason}`);
-    });
+    // Initialize dashboard
+    showLoading();
   </script>
 </body>
 </html>

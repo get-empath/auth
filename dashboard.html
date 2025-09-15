@@ -759,82 +759,78 @@
     async function loadUserData(userId, isRetry = false) {
   const attemptNumber = retryAttempts + 1;
   
-  // Enhanced logging for debugging
   console.log('=== Loading user data ===');
   console.log('User ID:', userId);
-  console.log('Current user:', currentUser ? currentUser.uid : 'null');
-  console.log('Auth state:', auth.currentUser ? 'authenticated' : 'not authenticated');
   console.log('Is retry:', isRetry);
   console.log('Retry attempt:', attemptNumber);
-  console.log('Online status:', navigator.onLine);
   
   if (isRetry) {
     showLoading('Retrying data load...');
+    
+    // On retry, refresh auth token and test connection
+    const tokenRefreshed = await refreshAuthToken();
+    console.log('Auth token refresh result:', tokenRefreshed);
+    
+    const connectionOk = await testFirestoreConnection();
+    console.log('Firestore connection test result:', connectionOk);
+    
+    if (!connectionOk) {
+      throw new Error('Firestore connection test failed');
+    }
   }
 
   try {
-    // Verify authentication state before proceeding
     if (!auth.currentUser) {
-      throw new Error('User not authenticated - auth.currentUser is null');
+      throw new Error('User not authenticated');
     }
     
-    if (auth.currentUser.uid !== userId) {
-      throw new Error(`UID mismatch: auth.currentUser.uid (${auth.currentUser.uid}) !== userId (${userId})`);
+    console.log('Making Firestore request...');
+    
+    // Try alternative method first on retries
+    let userDoc;
+    if (isRetry && retryAttempts > 1) {
+      console.log('Using alternative Firestore access method...');
+      userDoc = await loadUserDataAlternative(userId);
+    } else {
+      // Standard method with shorter timeout on retries
+      const timeoutDuration = isRetry ? 5000 : 10000;
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Firestore request timeout after ${timeoutDuration/1000} seconds`)), timeoutDuration);
+      });
+
+      const userDocPromise = firestore.collection('users').doc(userId).get();
+      userDoc = await Promise.race([userDocPromise, timeoutPromise]);
     }
-
-    console.log('Making Firestore request for user:', userId);
-    console.log('Auth token exists:', !!auth.currentUser.accessToken);
     
-    // Add timeout to detect hanging requests
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Firestore request timeout after 10 seconds')), 10000);
-    });
-
-    const userDocPromise = firestore.collection('users').doc(userId).get();
-    const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
-    
-    console.log('Firestore response received');
-    console.log('Document exists:', userDoc.exists);
-    console.log('Document metadata:', userDoc.metadata);
+    console.log('Firestore response received, document exists:', userDoc.exists);
     
     if (userDoc.exists) {
-      const docData = userDoc.data();
-      console.log('Document data:', docData);
-      console.log('Document keys:', Object.keys(docData || {}));
+      userData = userDoc.data();
+      console.log('Document data loaded successfully');
       
-      userData = docData;
-      
-      // Update welcome message
+      // Update UI
       const displayName = userData.firstName || 'there';
       document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
       
-      // Update account information
       const email = userData.email || currentUser.email;
       document.getElementById('user-email').textContent = email;
       document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
       document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
       
-      // Update subscription status
       const status = userData.subscriptionStatus || 'free';
       const plan = userData.plan || 'free';
-      console.log('Subscription status:', status, 'Plan:', plan);
       updateSubscriptionStatus(status, plan);
       
-      // Setup billing management if user has FastSpring customer ID
       if (userData.fastspringCustomerId && status === 'active') {
         const manageBillingBtn = document.getElementById('manage-billing-btn');
-        const billingUrl = `https://empath.onfastspring.com/account`;
-        manageBillingBtn.href = billingUrl;
-        console.log('Billing management setup for customer:', userData.fastspringCustomerId);
+        manageBillingBtn.href = 'https://empath.onfastspring.com/account';
       }
       
-      retryAttempts = 0; // Reset retry counter on success
-      console.log('User data loaded successfully');
+      retryAttempts = 0;
       
     } else {
-      console.log('Document does not exist, creating new user document');
+      console.log('Document does not exist, creating new one...');
       
-      // Create basic user document if it doesn't exist
       const basicUserData = {
         email: currentUser.email,
         firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
@@ -842,23 +838,24 @@
         subscriptionStatus: 'free',
         plan: 'free',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdVia: 'dashboard_auto_create',
+        createdVia: 'dashboard_timeout_recovery',
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       
-      console.log('Creating user document with data:', basicUserData);
+      // Try to create with shorter timeout
+      const createPromise = firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+      const createTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Document creation timeout')), 5000);
+      });
       
-      await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+      await Promise.race([createPromise, createTimeout]);
       userData = basicUserData;
-
-      // Update UI with basic info
+      
       document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
       document.getElementById('user-email').textContent = currentUser.email;
       document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
       document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-                  
       updateSubscriptionStatus('free', 'free');
-      console.log('New user document created successfully');
     }
     
     showDashboard();
@@ -866,81 +863,98 @@
     
   } catch (error) {
     console.error('=== Error loading user data ===');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-    console.error('User ID that failed:', userId);
-    console.error('Auth current user:', auth.currentUser ? auth.currentUser.uid : 'null');
-    console.error('Retry attempts so far:', retryAttempts);
-    console.error('Max retry attempts:', maxRetryAttempts);
-    console.error('Navigator online:', navigator.onLine);
+    console.error('Error:', error.message);
     
     retryAttempts++;
     
-    // Handle different error types with specific logic
-    if (error.code === 'permission-denied') {
-      console.error('Permission denied - likely Firestore security rules issue');
-      showError('Access denied. Please sign out and sign in again, or contact support if this persists.');
-      
-    } else if (error.code === 'unavailable' || error.message.includes('offline')) {
-      console.error('Firestore unavailable or offline');
-      
+    if (error.message.includes('timeout')) {
       if (retryAttempts < maxRetryAttempts) {
-        console.log(`Retrying in 3 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+        console.log(`Retrying after timeout (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
+        // Exponential backoff: 3s, 6s, 12s
+        const delay = Math.min(3000 * Math.pow(2, retryAttempts - 1), 12000);
         setTimeout(() => {
           loadUserData(userId, true);
-        }, 3000);
+        }, delay);
       } else {
-        showError('Unable to connect to our servers. Please check your internet connection.');
-        updateSubscriptionStatus(null, null); // Show offline state
-        
-        // Show dashboard with limited info from Firebase Auth
-        document.getElementById('welcome-message').textContent = `Welcome back!`;
-        document.getElementById('user-email').textContent = currentUser.email;
-        document.getElementById('first-name-display').textContent = 'Unable to load';
-        document.getElementById('last-name-display').textContent = 'Unable to load';
-        showDashboard();
+        // Final fallback: create minimal dashboard
+        console.log('Max retries reached, showing fallback dashboard');
+        showMinimalDashboard();
       }
-      
-    } else if (error.message.includes('timeout')) {
-      console.error('Request timeout');
-      
-      if (retryAttempts < maxRetryAttempts) {
-        console.log(`Retrying after timeout in 2 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
-        setTimeout(() => {
-          loadUserData(userId, true);
-        }, 2000);
-      } else {
-        showError('Server response timeout. Please try again later.');
-      }
-      
-    } else if (error.code === 'unauthenticated') {
-      console.error('User unauthenticated - redirecting to login');
-      auth.signOut().then(() => {
-        window.location.href = '/login';
-      });
-      
-    } else if (error.message.includes('UID mismatch')) {
-      console.error('UID mismatch detected - signing out');
-      auth.signOut().then(() => {
-        window.location.href = '/login';
-      });
-      
     } else {
-      console.error('Unknown error type');
-      
-      if (retryAttempts < maxRetryAttempts) {
-        console.log(`Retrying unknown error in 2 seconds (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
-        setTimeout(() => {
-          loadUserData(userId, true);
-        }, 2000);
-      } else {
-        showError(`Failed to load account data: ${error.message}`);
-      }
+      showError(`Failed to load account data: ${error.message}`);
     }
+  }
+}
+
+function showMinimalDashboard() {
+  console.log('Showing minimal dashboard due to persistent connection issues');
+  
+  // Set basic user info from auth
+  document.getElementById('welcome-message').textContent = 'Welcome back!';
+  document.getElementById('user-email').textContent = currentUser.email;
+  document.getElementById('first-name-display').textContent = 'Connection issue';
+  document.getElementById('last-name-display').textContent = 'Connection issue';
+  
+  // Show free plan status
+  updateSubscriptionStatus('free', 'free');
+  
+  // Show dashboard with a connection warning
+  showDashboard();
+  
+  // Add a notice about the connection issue
+  const warningDiv = document.createElement('div');
+  warningDiv.className = 'error-message';
+  warningDiv.innerHTML = `
+    <div>Connection issue detected. Some features may not work properly.</div>
+    <button class="retry-button" onclick="location.reload()">Refresh Page</button>
+  `;
+  document.querySelector('.main-container').insertBefore(warningDiv, document.querySelector('.cards-grid'));
+}
+
+async function refreshAuthToken() {
+  try {
+    console.log('Refreshing auth token...');
+    const user = auth.currentUser;
+    if (user) {
+      await user.getIdToken(true); // Force refresh
+      console.log('Auth token refreshed successfully');
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to refresh auth token:', error);
+    return false;
+  }
+  return false;
+}
+
+// Test Firestore connectivity with a simple operation
+async function testFirestoreConnection() {
+  try {
+    console.log('Testing Firestore connection...');
+    const testDoc = await firestore.collection('_test').doc('connection').get();
+    console.log('Firestore connection test successful');
+    return true;
+  } catch (error) {
+    console.error('Firestore connection test failed:', error);
+    return false;
+  }
+}
+
+// Alternative document access method
+async function loadUserDataAlternative(userId) {
+  try {
+    console.log('Trying alternative Firestore access method...');
     
-    console.error('=== End error handling ===');
+    // Try with explicit source options
+    const userDoc = await firestore.collection('users').doc(userId).get({
+      source: 'server' // Force server read, bypass cache
+    });
+    
+    console.log('Alternative method successful, document exists:', userDoc.exists);
+    return userDoc;
+  } catch (error) {
+    console.error('Alternative method failed:', error);
+    throw error;
   }
 }
 

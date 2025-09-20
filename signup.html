@@ -304,24 +304,181 @@
       text-decoration: underline;
     }
 
-    /* Responsive design */
+    /* Mobile Responsive Design */
     @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      .logo-container {
+        margin-top: 20px;
+        margin-bottom: 40px;
+      }
+
       .logo {
         height: 48px;
       }
 
+      .page-container {
+        min-height: auto;
+      }
+
       .main-layout {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 30px;
+        max-width: 100%;
+      }
+
+      /* Mobile: Social proof first, then form */
+      .social-proof {
+        order: 1;
+        margin-bottom: 20px;
+      }
+
+      .container {
+        order: 2;
+        max-width: 100%;
+        padding: 30px 24px;
+        margin: 0;
       }
 
       .social-proof h2 {
-        font-size: 28px !important;
+        font-size: 26px;
+        margin-bottom: 24px;
+        letter-spacing: -0.05rem;
       }
 
       .hero-features {
+        display: grid;
         grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 24px;
+        text-align: left;
+      }
+
+      .hero-features div {
+        font-size: 14px;
+        justify-content: flex-start;
+      }
+
+      .checkmark {
+        font-size: 14px;
+        margin-right: 10px;
+      }
+
+      .testimonial {
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 14px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin: 10px 0 30px 0;
+        line-height: 1.1;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      input {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 8px;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px 32px;
+        font-size: 16px;
+        border-radius: 12px;
+        min-width: auto;
+      }
+
+      .tos {
+        line-height: 1.4;
+        margin-top: 24px;
+      }
+    }
+
+    /* Extra small mobile devices */
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+
+      .container {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 5px 0 24px 0;
+      }
+
+      .social-proof h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+      }
+
+      .hero-features div {
+        font-size: 13px;
+      }
+
+      .testimonial {
+        padding: 16px;
+        font-size: 13px;
+      }
+    }
+
+    /* Landscape mobile optimization */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .logo-container {
+        margin-bottom: 20px;
+      }
+
+      .main-layout {
+        gap: 20px;
+      }
+
+      .social-proof h2 {
+        font-size: 24px;
+        margin-bottom: 16px;
+      }
+
+      .hero-features {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .hero-features div {
+        font-size: 12px;
+        text-align: center;
+        justify-content: center;
+      }
+
+      .testimonial {
+        padding: 14px;
+        margin-bottom: 10px;
+        font-size: 13px;
+      }
+
+      .container {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 5px 0 20px 0;
+      }
+
+      .form-group {
+        margin-bottom: 14px;
       }
     }
   </style>

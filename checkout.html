@@ -377,6 +377,40 @@
       });
     }
 
+    /**
+     * Attach the Firebase uid to the FastSpring cart.
+     *
+     * The uid rides along as a tag and is what the fastspringWebhook Cloud
+     * Function uses to find the user (`data.tags.userId`). Without it the
+     * webhook falls back to matching on email, which silently fails whenever
+     * the payment email differs from the signup email - the customer pays and
+     * gets no access.
+     *
+     * fastspring.builder.reset() clears tags along with the cart, so this must
+     * be called after EVERY push(), not just the first one.
+     */
+    function applyUserRecognition(plan) {
+      // Keyed on userId, not email: the uid is the thing the webhook needs.
+      if (!userInfo.userId) {
+        console.warn('No userId available - checkout will rely on email matching');
+        return;
+      }
+
+      try {
+        fastspring.builder.recognize({
+          email: userInfo.email || '',
+          tags: {
+            userId: userInfo.userId,
+            displayName: userInfo.displayName,
+            plan: plan,
+            source: 'web_checkout'
+          }
+        });
+      } catch (error) {
+        console.error('User recognition error:', error);
+      }
+    }
+
     function initializeCheckout(plan = 'monthly') {
       if (typeof fastspring === 'undefined' || !fastspring.builder) {
         showError('Payment system not available. Please refresh the page.');
@@ -402,24 +436,7 @@
           }
         });
 
-        // Set user recognition if available
-        if (userInfo.email) {
-          setTimeout(() => {
-            try {
-              fastspring.builder.recognize({
-                email: userInfo.email,
-                tags: {
-                  userId: userInfo.userId,
-                  displayName: userInfo.displayName,
-                  plan: plan,
-                  source: 'web_checkout'
-                }
-              });
-            } catch (error) {
-              console.log('User recognition error:', error);
-            }
-          }, 1000);
-        }
+        applyUserRecognition(plan);
 
         isInitialized = true;
         currentPlan = plan;
@@ -468,6 +485,8 @@
                 lastName: userInfo.displayName ? userInfo.displayName.split(' ').slice(1).join(' ') : ''
               }
             });
+
+            applyUserRecognition('monthly');
 
             currentPlan = 'monthly';
             updatePlanDetails('monthly');
@@ -519,6 +538,8 @@
                 lastName: userInfo.displayName ? userInfo.displayName.split(' ').slice(1).join(' ') : ''
               }
             });
+
+            applyUserRecognition('annual');
 
             currentPlan = 'annual';
             updatePlanDetails('annual');

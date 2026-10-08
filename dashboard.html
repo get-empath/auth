@@ -133,6 +133,11 @@
       color: #0f5132;
     }
 
+    .status-trial {
+      background: #cfe2ff;
+      color: #084298;
+    }
+
     .status-pending {
       background: #fff3cd;
       color: #664d03;
@@ -657,6 +662,16 @@
           }
           break;
 
+        case 'trial':
+          statusElement.classList.add('status-trial');
+          statusElement.textContent = 'Free Trial';
+          planNameElement.textContent = 'Free Trial';
+          planDetailsElement.textContent = userData && userData.nextChargeDate
+            ? `Full access to all features - billing starts ${formatDate(userData.nextChargeDate)}`
+            : 'Full access to all features during your trial';
+          manageBillingBtn.style.display = 'inline-block';
+          break;
+
         case 'pending':
           statusElement.classList.add('status-pending');
           statusElement.textContent = 'Pending';
@@ -813,12 +828,13 @@
         } else {
           console.log('Document does not exist, creating new one...');
           
+          // No entitlement fields here - FastSpring owns those and Firestore
+          // rules reject client writes to them. A document carrying none of
+          // them reads as no access, which is the correct default.
           const basicUserData = {
             email: currentUser.email,
             firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
             lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
-            subscriptionStatus: 'free',
-            plan: 'free',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             createdVia: 'dashboard_auto_create',
             lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()

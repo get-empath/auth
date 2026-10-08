@@ -134,6 +134,13 @@
       margin-top: 4px;
     }
 
+    .plan-trial {
+      color: #495057;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
     .back-link {
       text-align: center;
       margin-top: 16px;
@@ -260,7 +267,7 @@
 
   <div class="main-container">
     <div class="left-content">
-      <h2>Complete Your Purchase</h2>
+      <h2 id="checkout-heading">Complete Your Purchase</h2>
 
       <div id="error-container"></div>
 
@@ -277,6 +284,7 @@
         <div class="plan-name" id="plan-name">Pro Monthly</div>
         <div class="plan-price" id="plan-price">$7.99/month</div>
         <div class="plan-savings" id="plan-savings" style="display: none;"></div>
+        <div class="plan-trial" id="plan-trial" style="display: none;"></div>
       </div>
 
       <div class="back-link">
@@ -300,17 +308,39 @@
     let isInitialized = false;
     let userInfo = {};
 
-    const planConfig = {
+    // /enterprise/checkout serves this same page with the enterprise products.
+    // The trial length lives on the FastSpring product, not here - `trial` is
+    // display copy only and must match what FastSpring is configured to do.
+    const isEnterprise = window.location.pathname.startsWith('/enterprise');
+
+    const planConfig = isEnterprise ? {
+      monthly: {
+        name: 'Enterprise Monthly',
+        price: '$7.99/month',
+        savings: null,
+        trial: '30-day free trial, then billed monthly',
+        productId: 'empath-enterprise-monthly'
+      },
+      annual: {
+        name: 'Enterprise Annual',
+        price: '$79.99/year',
+        savings: 'Get two months free by paying annually',
+        trial: '30-day free trial, then billed annually',
+        productId: 'empath-enterprise-annual'
+      }
+    } : {
       monthly: {
         name: 'Pro Monthly',
         price: '$7.99/month',
         savings: null,
+        trial: null,
         productId: 'empath-monthly'
       },
       annual: {
         name: 'Pro Annual',
         price: '$79.99/year',
         savings: 'Get two months free by paying annually',
+        trial: null,
         productId: 'empath-annual'
       }
     };
@@ -369,6 +399,14 @@
       } else {
         savingsEl.style.display = 'none';
       }
+
+      const trialEl = document.getElementById('plan-trial');
+      if (config.trial) {
+        trialEl.textContent = config.trial;
+        trialEl.style.display = 'block';
+      } else {
+        trialEl.style.display = 'none';
+      }
     }
 
     function updateButtonStates() {
@@ -403,7 +441,7 @@
             userId: userInfo.userId,
             displayName: userInfo.displayName,
             plan: plan,
-            source: 'web_checkout'
+            source: isEnterprise ? 'enterprise_checkout' : 'web_checkout'
           }
         });
       } catch (error) {
@@ -604,6 +642,12 @@
         }
       }
     });
+
+    if (isEnterprise) {
+      document.getElementById('checkout-heading').textContent = 'Start Your Free Trial';
+      // The static markup shows the public plan until init runs
+      updatePlanDetails('monthly');
+    }
 
     // Initialize checkout when page loads
     window.addEventListener('load', function() {

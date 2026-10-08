@@ -493,7 +493,7 @@
   <div class="page-container">
     <div class="main-layout">
       <div class="social-proof">
-        <h2>Get started for free.</h2>
+        <h2 id="hero-heading">Get started for free.</h2>
         
         <div class="hero-features">
           <div><span class="checkmark">✓</span> Launch Devices in Seconds</div>
@@ -606,12 +606,17 @@
       }
     };
 
+    // /enterprise serves this same page for enterprise customers: paid plans
+    // only (no free tier), and checkout continues at /enterprise/checkout,
+    // which sells the enterprise products with the 30-day trial.
+    const isEnterprise = window.location.pathname.startsWith('/enterprise');
+
     // Get plan from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const selectedPlan = urlParams.get('plan') || 'monthly';
-    
+
     // Validate plan
-    const validPlans = Object.keys(planConfigs);
+    const validPlans = Object.keys(planConfigs).filter(plan => !(isEnterprise && plan === 'free'));
     const currentPlan = validPlans.includes(selectedPlan) ? selectedPlan : 'monthly';
 
     const signupForm = document.getElementById('signup-form');
@@ -678,15 +683,17 @@
         // Step 2: Create comprehensive user document
         console.log('Creating Firestore user document...');
         
+        // Entitlement fields (plan, subscriptionStatus) are deliberately absent.
+        // FastSpring is the source of truth for those, and Firestore rules
+        // reject client writes to them. What the user *chose* is recorded as
+        // selectedPlan; what they are *entitled to* comes back via webhook.
         const userData = {
           email: user.email,
           firstName: firstName,
           lastName: lastName,
           displayName: `${firstName} ${lastName}`,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          plan: currentPlan,
-          subscriptionStatus: currentPlan === 'free' ? 'free' : 'pending',
-          createdVia: 'web_signup',
+          createdVia: isEnterprise ? 'enterprise_signup' : 'web_signup',
           userAgent: navigator.userAgent.substring(0, 200),
           // Additional fields for better tracking
           signupSource: window.location.href,
@@ -728,10 +735,11 @@
             userId: user.uid,
             displayName: userData.displayName,
             plan: currentPlan,
-            source: 'web_signup'
+            source: isEnterprise ? 'enterprise_signup' : 'web_signup'
           });
-          
-          const checkoutUrl = `https://auth.get-empath.com/checkout?${checkoutParams.toString()}`;
+
+          const checkoutPath = isEnterprise ? '/enterprise/checkout' : '/checkout';
+          const checkoutUrl = `https://auth.get-empath.com${checkoutPath}?${checkoutParams.toString()}`;
           
           showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
           console.log('Paid plan - redirecting to custom checkout:', checkoutUrl);
@@ -774,7 +782,11 @@
     });
 
     // Initialize the page
-    console.log('Signup page loaded. Plan:', currentPlan, 'Config:', planConfigs[currentPlan]);
+    if (isEnterprise) {
+      document.getElementById('hero-heading').textContent = 'Start your 30-day free trial.';
+    }
+
+    console.log('Signup page loaded. Plan:', currentPlan, 'Enterprise:', isEnterprise, 'Config:', planConfigs[currentPlan]);
 
     // Focus on first name input for better UX
     document.getElementById('first-name').focus();

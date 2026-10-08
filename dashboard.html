@@ -433,7 +433,7 @@
             <a href="#" class="button button-primary" id="manage-billing-btn" target="_blank" style="display: none;">
               Manage Billing
             </a>
-            <a href="https://auth.get-empath.com/checkout?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
+            <a href="/checkout?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
               Upgrade to Pro
             </a>
             <button class="retry-button" id="retry-data-btn" style="display: none;">
@@ -539,6 +539,14 @@
 
     let currentUser = null;
     let userData = null;
+
+    // Enterprise accounts go back to the enterprise checkout (30-day trial
+    // products); checkout itself reads the uid from the signed-in session.
+    function getCheckoutPath() {
+      return userData && userData.createdVia === 'enterprise_signup'
+        ? '/enterprise/checkout'
+        : '/checkout';
+    }
     let retryAttempts = 0;
     const maxRetryAttempts = 3;
     let userDocListener = null;
@@ -628,13 +636,11 @@
           // Update upgrade button with user info for checkout pre-filling
           if (currentUser && userData) {
             const upgradeParams = new URLSearchParams({
-              email: userData.email || currentUser.email,
-              userId: currentUser.uid,
               displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_upgrade'
             });
-            upgradeBtn.href = `https://auth.get-empath.com/checkout?${upgradeParams.toString()}`;
+            upgradeBtn.href = `${getCheckoutPath()}?${upgradeParams.toString()}`;
           }
           break;
 
@@ -689,13 +695,11 @@
           // Update upgrade button with user info for checkout pre-filling
           if (currentUser && userData) {
             const upgradeParams = new URLSearchParams({
-              email: userData.email || currentUser.email,
-              userId: currentUser.uid,
               displayName: userData.firstName || currentUser.email.split('@')[0],
               plan: 'monthly',
               source: 'dashboard_reactivate'
             });
-            upgradeBtn.href = `https://auth.get-empath.com/checkout?${upgradeParams.toString()}`;
+            upgradeBtn.href = `${getCheckoutPath()}?${upgradeParams.toString()}`;
           }
           break;
 

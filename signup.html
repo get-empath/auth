@@ -289,18 +289,23 @@
       animation: dots 2s infinite;
     }
 
-    .switch-plan {
+    .switch-plan, .signin-link {
       text-align: center;
       margin-top: 16px;
     }
 
-    .switch-plan a {
+    .signin-link {
+      color: #6c757d;
+      font-size: 13px;
+    }
+
+    .switch-plan a, .signin-link a {
       color: #667eea;
       text-decoration: none;
       font-size: 13px;
     }
 
-    .switch-plan a:hover {
+    .switch-plan a:hover, .signin-link a:hover {
       text-decoration: underline;
     }
 
@@ -559,6 +564,10 @@
 
           <div class="message" id="form-message"></div>
 
+          <div class="signin-link">
+            Already have an account? <a href="/login" id="signin-link">Sign in</a>
+          </div>
+
           <div class="tos">
             By creating an account, you agree to our
             <a href="https://get-empath.com/terms-of-service" target="_blank">Terms of Service</a>.
@@ -618,6 +627,14 @@
     // Validate plan
     const validPlans = Object.keys(planConfigs).filter(plan => !(isEnterprise && plan === 'free'));
     const currentPlan = validPlans.includes(selectedPlan) ? selectedPlan : 'monthly';
+
+    // Every paid signup - and every "sign in instead" from this page - lands
+    // on the checkout that matches the URL the visitor came in on.
+    const checkoutPath = isEnterprise ? '/enterprise/checkout' : '/checkout';
+    const signinUrl = currentPlan === 'free'
+      ? '/login'
+      : `/login?next=${encodeURIComponent(`${checkoutPath}?plan=${currentPlan}`)}`;
+    document.getElementById('signin-link').href = signinUrl;
 
     const signupForm = document.getElementById('signup-form');
     const formMessage = document.getElementById('form-message');
@@ -729,17 +746,16 @@
           }, 2000);
           
         } else {
-          // Redirect to custom checkout page instead of FastSpring popup
+          // Redirect to custom checkout page instead of FastSpring popup.
+          // The new account is already signed in, and checkout takes the uid
+          // from that session - only the plan and a name for prefill go here.
           const checkoutParams = new URLSearchParams({
-            email: user.email,
-            userId: user.uid,
             displayName: userData.displayName,
             plan: currentPlan,
             source: isEnterprise ? 'enterprise_signup' : 'web_signup'
           });
 
-          const checkoutPath = isEnterprise ? '/enterprise/checkout' : '/checkout';
-          const checkoutUrl = `https://auth.get-empath.com${checkoutPath}?${checkoutParams.toString()}`;
+          const checkoutUrl = `${checkoutPath}?${checkoutParams.toString()}`;
           
           showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
           console.log('Paid plan - redirecting to custom checkout:', checkoutUrl);
@@ -759,7 +775,7 @@
         
         switch (error.code) {
           case 'auth/email-already-in-use':
-            errorMessage = 'This email is already registered. <a href="https://get-empath.com/signin" style="color: #667eea;">Sign in instead</a>';
+            errorMessage = `This email is already registered. <a href="${signinUrl}" style="color: #667eea;">Sign in instead</a>`;
             break;
           case 'auth/weak-password':
             errorMessage = 'Password should be at least 6 characters long.';

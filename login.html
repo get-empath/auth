@@ -269,7 +269,7 @@
         </div>
 
         <div class="signup-link">
-          Don't have an account? <a href="https://get-empath.com/signup">Create one here</a>
+          Don't have an account? <a href="https://get-empath.com/signup" id="signup-link">Create one here</a>
         </div>
       </form>
     </div>
@@ -297,11 +297,40 @@
     const progressIndicator = document.getElementById('progress-indicator');
     const forgotPasswordLink = document.getElementById('forgot-password-link');
 
+    /**
+     * Where to go after sign-in. A checkout page sends signed-out visitors here
+     * with ?next=<its path>; anything other than our own checkout paths falls
+     * back to the dashboard, so the parameter can't be used to redirect off-site.
+     */
+    const ALLOWED_NEXT_PATHS = ['/checkout', '/enterprise/checkout'];
+
+    function getRedirectTarget() {
+      const next = new URLSearchParams(window.location.search).get('next');
+      if (!next) return '/dashboard';
+
+      try {
+        const url = new URL(next, window.location.origin);
+        if (url.origin === window.location.origin && ALLOWED_NEXT_PATHS.includes(url.pathname)) {
+          return url.pathname + url.search;
+        }
+      } catch (error) {
+        console.warn('Ignoring invalid next parameter:', next);
+      }
+      return '/dashboard';
+    }
+
+    const redirectTarget = getRedirectTarget();
+    const isEnterpriseFlow = redirectTarget.startsWith('/enterprise');
+
+    // Keep enterprise visitors in the enterprise flow if they need an account
+    const signupUrl = isEnterpriseFlow ? '/enterprise' : 'https://get-empath.com/signup';
+    document.getElementById('signup-link').href = signupUrl;
+
     // Check if user is already signed in
     auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log('User already signed in, redirecting to dashboard');
-        window.location.href = '/dashboard';
+        console.log('User already signed in, redirecting to', redirectTarget);
+        window.location.href = redirectTarget;
       }
     });
 
@@ -349,9 +378,9 @@
         console.log('Login successful:', user.uid);
         showMessage('✅ Login successful! Redirecting...', 'success');
         
-        // Redirect to dashboard after short delay
+        // Redirect to dashboard (or back to checkout) after short delay
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = redirectTarget;
         }, 1000);
 
       } catch (error) {
@@ -363,7 +392,7 @@
         
         switch (error.code) {
           case 'auth/user-not-found':
-            errorMessage = 'No account found with this email address. <a href="https://get-empath.com/signup" style="color: #667eea;">Create an account</a>';
+            errorMessage = `No account found with this email address. <a href="${signupUrl}" style="color: #667eea;">Create an account</a>`;
             break;
           case 'auth/wrong-password':
             errorMessage = 'Incorrect password. Please try again or reset your password.';

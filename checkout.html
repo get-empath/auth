@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Complete Your Purchase - Empath</title>
 
+  <!-- Firebase SDKs (checkout requires a signed-in account) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
   <!-- FastSpring Embedded Checkout Script -->
   <script
     id="fsc-api"
@@ -347,11 +351,39 @@
 
     // Get user info from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    userInfo = {
-      email: urlParams.get('email'),
-      userId: urlParams.get('userId'),
-      displayName: urlParams.get('displayName')
-    };
+
+    firebase.initializeApp({
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'auth.get-empath.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    });
+
+    /**
+     * Resolve with the signed-in Firebase user, or send the visitor to log in.
+     *
+     * Checkout must only run for a real account: the uid we tag the cart with
+     * is how the webhook grants access, so it comes from the Firebase session,
+     * never from the URL. After login, the visitor returns to this same
+     * checkout (enterprise or public) with their chosen plan.
+     */
+    function requireSignedInUser() {
+      return new Promise(resolve => {
+        const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+          unsubscribe();
+          if (user) {
+            resolve(user);
+            return;
+          }
+          const plan = planConfig[urlParams.get('plan')] ? urlParams.get('plan') : 'monthly';
+          const next = `${window.location.pathname}?plan=${plan}`;
+          window.location.replace(`/login?next=${encodeURIComponent(next)}`);
+        });
+      });
+    }
 
     function showError(message) {
       const container = document.getElementById('error-container');
@@ -649,8 +681,20 @@
       updatePlanDetails('monthly');
     }
 
+    // Start the auth check right away so signed-out visitors are redirected
+    // before the checkout renders
+    const signedInUser = requireSignedInUser();
+
     // Initialize checkout when page loads
-    window.addEventListener('load', function() {
+    window.addEventListener('load', async function() {
+      const user = await signedInUser;
+      userInfo = {
+        email: user.email,
+        userId: user.uid,
+        // Prefill only - signup passes the name it just collected
+        displayName: user.displayName || urlParams.get('displayName') || ''
+      };
+
       setTimeout(() => {
         if (typeof fastspring !== 'undefined' && fastspring.builder) {
           // Check if user specified a plan in URL

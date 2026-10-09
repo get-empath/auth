@@ -19,166 +19,350 @@
   </script>
 
   <style>
+    /*
+     * Tokens from the marketing site (EmpathWebsite/src/app/globals.css).
+     * The brand gradient only goes on surfaces nothing sits on, or under dark
+     * type; its ends are too light for white text or for type on white.
+     */
+    :root {
+      --ink-50: #f7f7f8;
+      --ink-100: #ededf0;
+      --ink-200: #d9d9df;
+      --ink-300: #b9b9c4;
+      --ink-500: #6b6b7b;
+      --ink-600: #52525f;
+      --ink-700: #3f3f4a;
+      --ink-800: #26262e;
+      --ink-900: #15151a;
+      --ink-950: #0b0b0e;
+      --accent-50: #fef4f2;
+      --accent-200: #fbcbc3;
+      --accent-400: #e8705e;
+      --accent-500: #dc4733;
+      --accent-600: #d03222;
+      --accent-700: #ab2519;
+      --accent-800: #8a1f16;
+      --brand-gold: #f2c33c;
+      --sky-200: #cfe8f0;
+      --sky-600: #317f98;
+      --gradient-brand: linear-gradient(to right bottom, #8ac6d9, #77b4e6, #9199e5, #be75c8, #dd4a8d, #e9446b, #e94c47, #de5c1d, #e6771c, #eb9121, #f0aa2c, #f2c33c);
+      --gradient-brand-h: linear-gradient(to right, #8ac6d9, #9199e5, #dd4a8d, #e94c47, #e6771c, #f2c33c);
+      --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
-      background: white;
       margin: 0;
-      padding: 24px;
       min-height: 100vh;
-    }
-
-    .logo-container {
-      text-align: center;
-      margin-top: 30px;
-      margin-bottom: 60px;
-    }
-
-    .logo-link {
-      display: inline-block;
-    }
-
-    .logo {
-      height: 60px;
-      width: auto;
-      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.10));
-      opacity: 0.9;
-    }
-
-    .main-container {
       display: flex;
-      gap: 100px;
-      max-width: 1200px;
+      flex-direction: column;
+      background: var(--ink-50);
+      color: var(--ink-800);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; }
+
+    a { color: var(--accent-700); }
+    a:hover { color: var(--accent-800); }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-500);
+      outline-offset: 2px;
+    }
+
+    .site-header {
+      flex-shrink: 0;
+      background: #fff;
+      border-bottom: 1px solid var(--ink-100);
+    }
+
+    .site-header-inner {
+      max-width: 1040px;
       margin: 0 auto;
-      align-items: flex-start;
+      padding: 0 32px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
-    .left-content {
-      flex: 0 0 400px;
-      padding: 160px 0px;
+    .wordmark {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--ink-900);
+      text-decoration: none;
     }
 
-    h2 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;  
-      margin: 0 0 24px 0;
-      color: #1a1a1a;
-      font-size: 45px;
-      font-weight: 900;
-      letter-spacing: -0.1rem;
-      text-align: center;
-      line-height: 40px;
+    .wordmark:hover { color: var(--ink-900); }
+
+    .secure {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--ink-600);
+      min-width: 0;
+    }
+
+    .secure-dot { color: var(--ink-300); }
+
+    #account-email {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px 32px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .page-heading { text-align: center; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .gradient-text {
+      display: inline-block;
+      background-image: var(--gradient-brand);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: var(--brand-gold);
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1;
+      letter-spacing: -0.024em;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .columns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .column {
+      flex: 1 1 380px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Matches the featured tier card on /pricing. */
+    .plan-card {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid var(--accent-400);
+      border-radius: 16px;
+      box-shadow: 0 0 0 1px var(--accent-200), 0 20px 25px -5px rgba(11, 11, 14, 0.08), 0 8px 10px -6px rgba(11, 11, 14, 0.08);
+      padding: 20px 28px 24px;
+    }
+
+    /* The tab sits behind the toggle, over the Annual half, with its bottom
+       edge tucked under the track. */
+    .plan-toggle-wrap {
+      position: relative;
+      padding-top: 22px;
+    }
+
+    .savings-tab-slot {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      right: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .savings-tab {
+      display: inline-block;
+      padding: 5px 14px 12px;
+      border-radius: 10px 10px 0 0;
+      background: var(--brand-gold);
+      color: var(--ink-900);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      white-space: nowrap;
     }
 
     .plan-toggle {
+      position: relative;
+      z-index: 1;
       display: flex;
-      background: #f8f9fa;
-      border-radius: 50px;
+      gap: 4px;
       padding: 4px;
-      margin-bottom: 32px;
-      border: 1px solid #e9ecef;
+      background: var(--ink-100);
+      border-radius: 9999px;
     }
 
     .plan-button {
       flex: 1;
-      padding: 12px 24px;
-      border: none;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 9999px;
       background: transparent;
-      border-radius: 50px;
+      color: var(--ink-600);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.3s ease;
-      color: #6c757d;
-      text-align: center;
+      transition: background-color 150ms, color 150ms;
     }
+
+    .plan-button:not(.active):hover { color: var(--ink-900); }
 
     .plan-button.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+      background: var(--ink-950);
+      color: #fff;
     }
 
-    .plan-button:not(.active):hover {
-      color: #495057;
-      background: rgba(102, 126, 234, 0.1);
-    }
+    .plan-button:disabled { cursor: not-allowed; }
+    .plan-button:disabled:not(.active) { opacity: 0.6; }
 
-    .plan-button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .plan-details {
-      text-align: center;
-      margin-bottom: 24px;
-      padding: 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      min-height: 70px;
+    .plan-summary {
+      margin-top: 22px;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .plan-kicker {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-600);
     }
 
     .plan-name {
-      font-weight: 600;
-      color: #495057;
-      font-size: 16px;
-      margin-bottom: 4px;
+      margin: 6px 0 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink-900);
     }
 
     .plan-price {
-      color: #667eea;
-      font-size: 18px;
+      margin: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .plan-price-amount {
+      font-size: 26px;
       font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
     }
 
-    .plan-savings {
-      color: #16a34a;
-      font-size: 12px;
-      font-weight: 500;
-      margin-top: 4px;
+    .plan-price-per {
+      font-size: 14px;
+      color: var(--ink-500);
     }
 
-    .plan-trial {
-      color: #495057;
+    .features {
+      margin: 18px 0 0;
+      padding: 16px 0 0;
+      border-top: 1px solid var(--ink-100);
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--ink-700);
+    }
+
+    .features svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--accent-600);
+    }
+
+    .fine-print {
+      margin: auto 0 0;
+      padding-top: 20px;
       font-size: 13px;
-      font-weight: 600;
-      margin-top: 6px;
+      line-height: 1.5;
+      color: var(--ink-500);
     }
 
-    .back-link {
-      text-align: center;
-      margin-top: 16px;
-      display: none;
-    }
+    .fine-print a { font-weight: 500; }
 
     .checkout-wrapper {
-      flex: 1;
-      background: white;
-      border-radius: 20px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-      min-height: 600px;
-      padding: 30px;
+      flex-grow: 1;
       position: relative;
+      min-height: 460px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border: 1px solid var(--ink-200);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(11, 11, 14, 0.05);
       overflow: hidden;
+    }
+
+    .checkout-wrapper::before {
+      content: '';
+      display: block;
+      flex-shrink: 0;
+      height: 4px;
+      background-image: var(--gradient-brand-h);
+    }
+
+    .checkout-body {
+      flex-grow: 1;
+      padding: 20px 28px 24px;
     }
 
     .loading-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
+      z-index: 10;
       background: rgba(255, 255, 255, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 12px;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
-      z-index: 10;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
     .loading-overlay.show {
@@ -186,14 +370,15 @@
       visibility: visible;
     }
 
+    /* A ring cut from the brand ramp. */
     .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(102, 126, 234, 0.3);
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      border-top-color: #667eea;
+      background: conic-gradient(from 0deg, #8ac6d9, #9199e5, #dd4a8d, #e94c47, #e6771c, #f2c33c, rgba(242, 195, 60, 0));
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
       animation: spin 1s linear infinite;
-      margin-bottom: 12px;
     }
 
     @keyframes spin {
@@ -201,112 +386,133 @@
     }
 
     .loading-text {
-      color: #667eea;
       font-size: 14px;
       font-weight: 500;
+      color: var(--ink-700);
     }
 
-    .error-message {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 12px 16px;
-      border-radius: 6px;
+    .error-message,
+    .success-message {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
       font-size: 14px;
       margin-bottom: 16px;
-      text-align: center;
+    }
+
+    .error-message svg,
+    .success-message svg { flex-shrink: 0; }
+
+    .error-message {
+      background: var(--accent-50);
+      border: 1px solid var(--accent-200);
+      color: var(--accent-800);
     }
 
     .success-message {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      color: #16a34a;
-      padding: 12px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      text-align: center;
+      background: var(--sky-200);
+      color: var(--ink-900);
+      font-weight: 500;
     }
 
-    /* Responsive design */
-    @media (max-width: 1024px) {
-      .main-container {
-        flex-direction: column;
-        gap: 24px;
-      }
-      
-      .left-content {
-        flex: none;
-        width: 100%;
-      }
+    .success-message svg { color: var(--sky-600); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation-duration: 3s; }
+      .loading-overlay, .plan-button { transition: none; }
     }
 
-    @media (max-width: 768px) {
-      .left-content, .checkout-wrapper {
-        margin: 0 12px;
-        padding: 24px 20px;
-        max-width: none;
-      }
-      
-      h2 {
-        font-size: 20px;
-      }
-      
-      .plan-button {
-        padding: 10px 16px;
-        font-size: 13px;
-      }
-      
-      .logo {
-        height: 48px;
-      }
+    @media (max-width: 640px) {
+      .site-header-inner { padding: 0 16px; }
+      main { padding: 20px 16px 32px; }
+      h1 { font-size: 28px; }
+      .plan-card { padding: 18px 20px 20px; }
+      .checkout-body { padding: 18px 16px 20px; }
+      .secure-label, .secure-dot { display: none; }
     }
   </style>
 </head>
 <body>
-  <div class="logo-container">
-    <a href="https://www.get-empath.com" class="logo-link">
-      <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
-    </a>
-  </div>
-
-  <div class="main-container">
-    <div class="left-content">
-      <h2 id="checkout-heading">Complete Your Purchase</h2>
-
-      <div id="error-container"></div>
-
-      <div class="plan-toggle">
-        <button class="plan-button active" data-plan="monthly" onclick="switchToMonthly()" id="monthly-btn">
-          Monthly Plan
-        </button>
-        <button class="plan-button" data-plan="annual" onclick="switchToAnnual()" id="annual-btn">
-          Annual Plan
-        </button>
-      </div>
-
-      <div class="plan-details" id="plan-details">
-        <div class="plan-name" id="plan-name">Pro Monthly</div>
-        <div class="plan-price" id="plan-price">$7.99/month</div>
-        <div class="plan-savings" id="plan-savings" style="display: none;"></div>
-        <div class="plan-trial" id="plan-trial" style="display: none;"></div>
-      </div>
-
-      <div class="back-link">
-        <a href="/signup">← Back to signup</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="https://www.get-empath.com" class="wordmark">Empath</a>
+      <div class="secure">
+        <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="secure-label">Secure checkout</span>
+        <span class="secure-dot" id="account-dot" hidden>·</span>
+        <span id="account-email"></span>
       </div>
     </div>
+  </header>
 
-    <div class="checkout-wrapper">
-      <div class="loading-overlay" id="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text" id="loading-text">Switching plans...</div>
-      </div>
-
-      <!-- FastSpring embedded checkout container -->
-      <div id="fsc-embedded-checkout-container"></div>
+  <main>
+    <div class="page-heading">
+      <p class="eyebrow"><span class="gradient-text">Checkout</span></p>
+      <h1 id="checkout-heading">Complete your purchase</h1>
     </div>
-  </div>
+
+    <div class="columns">
+      <section class="column" aria-label="Plan">
+        <div class="plan-card">
+          <div class="plan-toggle-wrap">
+            <div class="savings-tab-slot" aria-hidden="true">
+              <span class="savings-tab">2 months free</span>
+            </div>
+            <div class="plan-toggle" role="group" aria-label="Billing cycle">
+              <button type="button" class="plan-button active" data-plan="monthly" onclick="switchToMonthly()" id="monthly-btn" aria-pressed="true">
+                Monthly
+              </button>
+              <button type="button" class="plan-button" data-plan="annual" onclick="switchToAnnual()" id="annual-btn" aria-pressed="false" aria-label="Annual, 2 months free">
+                Annual
+              </button>
+            </div>
+          </div>
+
+          <div class="plan-summary" id="plan-details">
+            <div>
+              <p class="plan-kicker" id="plan-kicker">Monthly</p>
+              <h2 class="plan-name" id="plan-name">Pro</h2>
+            </div>
+            <p class="plan-price">
+              <span class="plan-price-amount" id="plan-price">$7.99</span>
+              <span class="plan-price-per" id="plan-per">per month</span>
+            </p>
+          </div>
+
+          <!-- Same wording as the feature list on /pricing. -->
+          <ul class="features">
+            <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Launch Devices in Seconds</li>
+            <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Screenshots with Zero Effort</li>
+            <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Analyze Competitors' Apps</li>
+            <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>iPhone Pro/Max, iPad, and Samsung</li>
+            <li><svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Frame Customization</li>
+          </ul>
+
+          <p class="fine-print">
+            Payments are processed by FastSpring. Cancel any time. Read about
+            <a href="https://www.get-empath.com/security-privacy/">security and privacy</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="column" aria-label="Payment">
+        <div class="checkout-wrapper">
+          <div class="checkout-body">
+            <div id="error-container" role="status"></div>
+            <!-- FastSpring embedded checkout container -->
+            <div id="fsc-embedded-checkout-container"></div>
+          </div>
+
+          <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loading-text">Switching plans...</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
 
   <script>
     let currentPlan = 'monthly';
@@ -314,38 +520,39 @@
     let userInfo = {};
 
     // /enterprise/checkout serves this same page with the enterprise products.
-    // The trial length lives on the FastSpring product, not here - `trial` is
-    // display copy only and must match what FastSpring is configured to do.
+    // Trial terms and the amount due today are shown by the FastSpring embed
+    // itself, so this page never states them and cannot drift from the
+    // product configuration.
     const isEnterprise = window.location.pathname.startsWith('/enterprise');
 
     const planConfig = isEnterprise ? {
       monthly: {
-        name: 'Enterprise Monthly',
-        price: '$7.99/month',
-        savings: null,
-        trial: '30-day free trial, then billed monthly',
+        kicker: 'Monthly',
+        name: 'Enterprise',
+        price: '$7.99',
+        per: 'per month',
         productId: 'empath-enterprise-monthly'
       },
       annual: {
-        name: 'Enterprise Annual',
-        price: '$79.99/year',
-        savings: 'Get two months free by paying annually',
-        trial: '30-day free trial, then billed annually',
+        kicker: 'Annual',
+        name: 'Enterprise',
+        price: '$79.99',
+        per: 'per year',
         productId: 'empath-enterprise-annual'
       }
     } : {
       monthly: {
-        name: 'Pro Monthly',
-        price: '$7.99/month',
-        savings: null,
-        trial: null,
+        kicker: 'Monthly',
+        name: 'Pro',
+        price: '$7.99',
+        per: 'per month',
         productId: 'empath-monthly'
       },
       annual: {
-        name: 'Pro Annual',
-        price: '$79.99/year',
-        savings: 'Get two months free by paying annually',
-        trial: null,
+        kicker: 'Annual',
+        name: 'Pro',
+        price: '$79.99',
+        per: 'per year',
         productId: 'empath-annual'
       }
     };
@@ -386,14 +593,17 @@
       });
     }
 
+    const ERROR_ICON = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 6v4.5M10 13.5v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    const CHECK_ICON = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
     function showError(message) {
       const container = document.getElementById('error-container');
-      container.innerHTML = `<div class="error-message">${message}</div>`;
+      container.innerHTML = `<div class="error-message">${ERROR_ICON}<span>${message}</span></div>`;
     }
 
     function showSuccess(message) {
       const container = document.getElementById('error-container');
-      container.innerHTML = `<div class="success-message">${message}</div>`;
+      container.innerHTML = `<div class="success-message">${CHECK_ICON}<span>${message}</span></div>`;
     }
 
     function clearMessages() {
@@ -422,29 +632,17 @@
 
     function updatePlanDetails(plan) {
       const config = planConfig[plan];
+      document.getElementById('plan-kicker').textContent = config.kicker;
       document.getElementById('plan-name').textContent = config.name;
       document.getElementById('plan-price').textContent = config.price;
-      
-      const savingsEl = document.getElementById('plan-savings');
-      if (config.savings) {
-        savingsEl.textContent = config.savings;
-        savingsEl.style.display = 'block';
-      } else {
-        savingsEl.style.display = 'none';
-      }
-
-      const trialEl = document.getElementById('plan-trial');
-      if (config.trial) {
-        trialEl.textContent = config.trial;
-        trialEl.style.display = 'block';
-      } else {
-        trialEl.style.display = 'none';
-      }
+      document.getElementById('plan-per').textContent = config.per;
     }
 
     function updateButtonStates() {
       document.querySelectorAll('.plan-button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.plan === currentPlan);
+        const isActive = btn.dataset.plan === currentPlan;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
       });
     }
 
@@ -697,7 +895,7 @@
     });
 
     if (isEnterprise) {
-      document.getElementById('checkout-heading').textContent = 'Start Your Free Trial';
+      document.getElementById('checkout-heading').textContent = 'Start your free trial';
       // The static markup shows the public plan until init runs
       updatePlanDetails('monthly');
     }
@@ -715,6 +913,12 @@
         // Prefill only - signup passes the name it just collected
         displayName: user.displayName || urlParams.get('displayName') || ''
       };
+
+      // Show which account the purchase is for, beside "Secure checkout"
+      if (user.email) {
+        document.getElementById('account-email').textContent = user.email;
+        document.getElementById('account-dot').hidden = false;
+      }
 
       setTimeout(() => {
         if (typeof fastspring !== 'undefined' && fastspring.builder) {

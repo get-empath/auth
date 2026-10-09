@@ -11,571 +11,532 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <style>
+    /*
+     * Tokens from the marketing site (EmpathWebsite/src/app/globals.css), as
+     * on checkout.html and login.html. The brand gradient only goes on surfaces nothing sits
+     * on; its ends are too light for type on white.
+     */
+    :root {
+      --ink-50: #f7f7f8;
+      --ink-100: #ededf0;
+      --ink-200: #d9d9df;
+      --ink-300: #b9b9c4;
+      --ink-400: #8c8c9c;
+      --ink-500: #6b6b7b;
+      --ink-600: #52525f;
+      --ink-700: #3f3f4a;
+      --ink-800: #26262e;
+      --ink-900: #15151a;
+      --ink-950: #0b0b0e;
+      --accent-50: #fef4f2;
+      --accent-200: #fbcbc3;
+      --accent-500: #dc4733;
+      --accent-600: #d03222;
+      --accent-700: #ab2519;
+      --accent-800: #8a1f16;
+      --brand-gold: #f2c33c;
+      --sky-200: #cfe8f0;
+      --sky-600: #317f98;
+      --gradient-brand: linear-gradient(to right bottom, #8ac6d9, #77b4e6, #9199e5, #be75c8, #dd4a8d, #e9446b, #e94c47, #de5c1d, #e6771c, #eb9121, #f0aa2c, #f2c33c);
+      --gradient-brand-h: linear-gradient(to right, #8ac6d9, #9199e5, #dd4a8d, #e94c47, #e6771c, #f2c33c);
+      --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
-      background: white;
       margin: 0;
-      padding: 24px;
       min-height: 100vh;
-    }
-
-    .logo-container {
-      text-align: center;
-      margin-top: 30px;
-      margin-bottom: 80px;
-    }
-
-    .logo-link {
-      display: inline-block;
-    }
-
-    .logo {
-      height: 60px;
-      width: auto;
-      filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.10));
-      opacity: 0.9;
-    }
-
-    .page-container {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: calc(100vh - 200px);
+      flex-direction: column;
+      background: var(--ink-50);
+      color: var(--ink-800);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
     }
 
-    .main-layout {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 60px;
-      max-width: 1200px;
-      width: 100%;
-      align-items: center;
+    button, input { font: inherit; }
+
+    a { color: var(--accent-700); }
+    a:hover { color: var(--accent-800); }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-500);
+      outline-offset: 2px;
     }
 
-    .social-proof {
-      color: #4a5568;
-      text-align: center;
+    .site-header {
+      flex-shrink: 0;
+      background: #fff;
+      border-bottom: 1px solid var(--ink-100);
     }
 
-    .social-proof h2 {
-      font-size: 32px;
-      font-weight: 900;
-      color: #1a1a1a;
-      margin-bottom: 36px;
-      letter-spacing: -0.1rem;
-      line-height: 1.1;
-    }
-
-    .hero-features {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 40px;
-      text-align: center;
-    }
-
-    .hero-features div {
+    .site-header-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 0 32px;
+      min-height: 56px;
       display: flex;
       align-items: center;
-      font-size: 15px;
-      font-weight: 500;
-      color: #4a5568;
+      justify-content: space-between;
+      gap: 16px;
     }
 
-    .checkmark {
-      color: #000000;
+    .wordmark {
+      font-size: 19px;
       font-weight: 700;
-      margin-right: 8px;
-      font-size: 16px;
+      letter-spacing: -0.025em;
+      color: var(--ink-900);
+      text-decoration: none;
     }
 
-    .testimonial {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 16px;
-      font-size: 15px;
-      color: #374151;
-      line-height: 1.5;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      font-style: italic;
-      transition: all 0.3s ease;
-      cursor: pointer;
+    .wordmark:hover { color: var(--ink-900); }
+
+    .header-aside {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-600);
     }
 
-    .testimonial:hover {
-      transform: scale(1.02);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    .header-aside a {
+      font-weight: 600;
+      text-decoration: none;
     }
 
-    .container {
-      background: white;
-      padding: 40px 60px 40px 60px;
-      border-radius: 12px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    main {
+      flex-grow: 1;
       width: 100%;
-      max-width: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px 64px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border: 1px solid var(--ink-200);
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(11, 11, 14, 0.06), 0 8px 10px -6px rgba(11, 11, 14, 0.06);
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background-image: var(--gradient-brand-h);
+    }
+
+    .auth-body { padding: 36px 36px 32px; }
+
+    .auth-heading {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .gradient-text {
+      display: inline-block;
+      background-image: var(--gradient-brand);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: var(--brand-gold);
+      -webkit-text-fill-color: transparent;
     }
 
     h1 {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      margin: 20px 0 40px 0;
-      color: #1a1a1a;
-      font-size: 38px;
-      font-weight: 900;
-      letter-spacing: -0.1rem;
-      line-height: 35px;
-      text-align: center;
+      margin: 0;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: -0.024em;
+      font-weight: 700;
+      color: var(--ink-900);
     }
 
-    .plan-info {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 24px;
-      text-align: center;
+    .subtitle {
+      margin: 10px 0 0;
+      font-size: 15px;
+      color: var(--ink-500);
     }
 
-    .form-group {
-      margin-bottom: 16px;
+    .form-group { margin-bottom: 16px; }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
     }
 
     label {
       display: block;
-      margin: 0px 0px 6px 6px;
+      font-size: 14px;
       font-weight: 500;
-      color: #4a5568;
-      font-size: 14px;
-      letter-spacing: -0.4px;
+      color: var(--ink-700);
     }
 
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      box-sizing: border-box;
-      border: 1.5px solid #e9ecef;
-      border-radius: 6px;
-      font-size: 14px;
-      background: #f8f9fa;
-      transition: all 0.3s ease;
-      letter-spacing: -0.2px;
-    }
+    .label-row label { margin: 0; }
+    .form-group > label { margin-bottom: 6px; }
 
-    input:focus {
-      outline: none;
-      border-color: #000000;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: center;
-      margin-top: 24px;
-    }
-
-    button {
-      padding: 12px 32px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-      min-width: 160px;
-    }
-
-    button:hover {
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      transform: none;
-      cursor: not-allowed;
-    }
-
-    .message {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 6px;
-    }
-
-    .message.error {
-      color: #dc2626;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-    }
-
-    .message.success {
-      color: #16a34a;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-    }
-
-    .message.info {
-      color: #0066cc;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-    }
-
-    .tos {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #6c757d;
-      text-align: center;
-    }
-
-    .tos a {
-      color: #667eea;
+    .label-link {
+      font-size: 13px;
+      font-weight: 500;
       text-decoration: none;
     }
 
-    .tos a:hover {
-      text-decoration: underline;
+    .label-link:hover { text-decoration: underline; }
+
+    input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid var(--ink-200);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink-900);
+      /* 16px keeps iOS Safari from zooming the page on focus. */
+      font-size: 16px;
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+
+    input::placeholder { color: var(--ink-400); }
+
+    input:hover { border-color: var(--ink-300); }
+
+    input:focus {
+      outline: none;
+      border-color: var(--ink-900);
+      box-shadow: 0 0 0 3px rgba(11, 11, 14, 0.08);
+    }
+
+    /* Matches the primary button on the marketing site: black, not the
+       gradient. */
+    .submit {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 8px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 9999px;
+      background: var(--ink-950);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 150ms;
+    }
+
+    .submit:hover { background: var(--ink-800); }
+
+    .submit:disabled {
+      background: var(--ink-700);
+      cursor: not-allowed;
     }
 
     .progress-indicator {
-      margin-top: 16px;
-      font-size: 13px;
-      color: #666;
-      text-align: center;
       display: none;
-    }
-
-    .progress-indicator.show {
-      display: flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--ink-600);
     }
 
+    .progress-indicator.show { display: flex; }
+
+    /* A ring cut from the brand ramp, as on checkout. */
     .spinner {
-      width: 12px;
-      height: 12px;
-      border: 2px solid rgba(102, 102, 102, 0.3);
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      border-top-color: #666;
+      background: conic-gradient(from 0deg, #8ac6d9, #9199e5, #dd4a8d, #e94c47, #e6771c, #f2c33c, rgba(242, 195, 60, 0));
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
       animation: spin 1s linear infinite;
-      margin-right: 8px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .dots {
-      display: inline-block;
-      margin-left: 4px;
-    }
-
-    @keyframes dots {
-      0%, 20% { content: ''; }
-      40% { content: '.'; }
-      60% { content: '..'; }
-      80%, 100% { content: '...'; }
-    }
-
-    .dots::after {
-      content: '';
-      animation: dots 2s infinite;
-    }
-
-    .switch-plan, .signin-link {
-      text-align: center;
+    .message {
       margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: center;
     }
 
-    .signin-link {
-      color: #6c757d;
-      font-size: 13px;
+    .message:empty { display: none; }
+
+    .message a { font-weight: 600; }
+
+    .message.error {
+      background: var(--accent-50);
+      border: 1px solid var(--accent-200);
+      color: var(--accent-800);
     }
 
-    .switch-plan a, .signin-link a {
-      color: #667eea;
+    .message.success {
+      background: var(--sky-200);
+      color: var(--ink-900);
+      font-weight: 500;
+    }
+
+    .message.info {
+      background: var(--ink-100);
+      color: var(--ink-800);
+    }
+
+    .switch-link {
+      margin: 24px 0 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--ink-100);
+      text-align: center;
+      font-size: 14px;
+      color: var(--ink-600);
+    }
+
+    .switch-link a {
+      font-weight: 600;
       text-decoration: none;
-      font-size: 13px;
     }
 
-    .switch-plan a:hover, .signin-link a:hover {
-      text-decoration: underline;
+    .switch-link a:hover { text-decoration: underline; }
+
+    /* Pitch on the left, form on the right; the form comes first on a phone. */
+    .signup-layout {
+      width: 100%;
+      max-width: 1040px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 420px);
+      gap: 64px;
+      align-items: center;
     }
 
-    /* Mobile Responsive Design */
-    @media (max-width: 768px) {
-      body {
-        padding: 16px;
-      }
+    .auth-card { justify-self: end; }
 
-      .logo-container {
-        margin-top: 20px;
-        margin-bottom: 40px;
-      }
-
-      .logo {
-        height: 48px;
-      }
-
-      .page-container {
-        min-height: auto;
-      }
-
-      .main-layout {
-        grid-template-columns: 1fr;
-        gap: 30px;
-        max-width: 100%;
-      }
-
-      /* Mobile: Social proof first, then form */
-      .social-proof {
-        order: 1;
-        margin-bottom: 20px;
-      }
-
-      .container {
-        order: 2;
-        max-width: 100%;
-        padding: 30px 24px;
-        margin: 0;
-      }
-
-      .social-proof h2 {
-        font-size: 26px;
-        margin-bottom: 24px;
-        letter-spacing: -0.05rem;
-      }
-
-      .hero-features {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-        margin-bottom: 24px;
-        text-align: center;
-      }
-
-      .hero-features div {
-        font-size: 14px;
-        justify-content: center;
-      }
-
-      .checkmark {
-        font-size: 14px;
-        margin-right: 10px;
-      }
-
-      .testimonial {
-        border-radius: 16px;
-        padding: 18px;
-        margin-bottom: 14px;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-
-      h1 {
-        font-size: 28px;
-        margin: 10px 0 30px 0;
-        line-height: 1.1;
-      }
-
-      .form-group {
-        margin-bottom: 18px;
-      }
-
-      input {
-        padding: 12px 14px;
-        font-size: 16px; /* Prevents zoom on iOS */
-        border-radius: 8px;
-      }
-
-      button {
-        width: 100%;
-        padding: 14px 32px;
-        font-size: 16px;
-        border-radius: 12px;
-        min-width: auto;
-      }
-
-      .tos {
-        line-height: 1.4;
-        margin-top: 24px;
-      }
+    .pitch h2 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--ink-900);
     }
 
-    /* Extra small mobile devices */
-    @media (max-width: 480px) {
-      body {
-        padding: 12px;
-      }
-
-      .container {
-        padding: 24px 20px;
-      }
-
-      h1 {
-        font-size: 24px;
-        margin: 5px 0 24px 0;
-      }
-
-      .social-proof h2 {
-        font-size: 22px;
-        margin-bottom: 20px;
-      }
-
-      .hero-features div {
-        font-size: 13px;
-      }
-
-      .testimonial {
-        padding: 16px;
-        font-size: 13px;
-      }
+    .features {
+      margin: 28px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 24px;
     }
 
-    /* Landscape mobile optimization */
-    @media (max-width: 768px) and (orientation: landscape) {
-      .logo-container {
-        margin-bottom: 20px;
-      }
+    .features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--ink-700);
+    }
 
-      .main-layout {
-        gap: 20px;
-      }
+    .features svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: var(--accent-600);
+    }
 
-      .social-proof h2 {
-        font-size: 24px;
-        margin-bottom: 16px;
-      }
+    .quotes {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-      .hero-features {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
+    .quote {
+      position: relative;
+      margin: 0;
+      padding: 16px 20px 16px 24px;
+      background: #fff;
+      border: 1px solid var(--ink-200);
+      border-radius: 14px;
+      overflow: hidden;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--ink-700);
+    }
 
-      .hero-features div {
-        font-size: 12px;
-        text-align: center;
-        justify-content: center;
-      }
+    /* The ramp as an edge. Nothing sits on it, so its pale ends are fine. */
+    .quote::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 3px;
+      background-image: var(--gradient-brand);
+    }
 
-      .testimonial {
-        padding: 14px;
-        margin-bottom: 10px;
-        font-size: 13px;
-      }
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
-      .container {
-        padding: 24px 20px;
-      }
+    .hint {
+      font-weight: 400;
+      color: var(--ink-500);
+    }
 
-      h1 {
-        font-size: 24px;
-        margin: 5px 0 20px 0;
-      }
+    .tos {
+      margin: 16px 0 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--ink-500);
+      text-align: center;
+    }
 
-      .form-group {
-        margin-bottom: 14px;
+    .tos a { color: var(--ink-700); }
+    .tos a:hover { color: var(--ink-900); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation-duration: 3s; }
+      input, .submit { transition: none; }
+    }
+
+    @media (max-width: 900px) {
+      .signup-layout {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 480px;
+        gap: 40px;
       }
+      .auth-card { justify-self: stretch; max-width: none; order: -1; }
+      .pitch h2 { font-size: 32px; }
+    }
+
+    @media (max-width: 640px) {
+      .site-header-inner { padding: 0 16px; }
+      .header-aside-label { display: none; }
+      main {
+        align-items: flex-start;
+        padding: 24px 16px 40px;
+      }
+      .auth-body { padding: 28px 20px 24px; }
+      h1 { font-size: 28px; }
+      .features { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 380px) {
+      .name-row { grid-template-columns: 1fr; gap: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="logo-container">
-    <a href="https://www.get-empath.com" class="logo-link">
-      <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
-    </a>
-  </div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="https://www.get-empath.com" class="wordmark">Empath</a>
+      <p class="header-aside">
+        <span class="header-aside-label">Already have an account?</span>
+        <a href="/login" id="header-signin-link">Sign in</a>
+      </p>
+    </div>
+  </header>
 
-  <div class="page-container">
-    <div class="main-layout">
-      <div class="social-proof">
+  <main>
+    <div class="signup-layout">
+      <section class="pitch" aria-labelledby="hero-heading">
+        <p class="eyebrow"><span class="gradient-text">Sign up</span></p>
         <h2 id="hero-heading">Get started for free.</h2>
-        
-        <div class="hero-features">
-          <div><span class="checkmark">✓</span> Launch Devices in Seconds</div>
-          <div><span class="checkmark">✓</span> Screenshots with Zero Effort</div>
-          <div><span class="checkmark">✓</span> Analyze Competitors' Apps</div>
-          <div><span class="checkmark">✓</span> iOS & Android Bookmarks</div>
-          <div><span class="checkmark">✓</span> Built-in Password Manager</div>
-          <div><span class="checkmark">✓</span> Set Any GPS Location</div>
-          <div><span class="checkmark">✓</span> Batch Capture Competitors</div>
-          <div><span class="checkmark">✓</span> Frame Customization</div>
+
+        <ul class="features">
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Launch devices in seconds</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Screenshots with zero effort</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Analyze competitors' apps</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> iOS &amp; Android bookmarks</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Built-in password manager</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Set any GPS location</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Batch capture competitors</li>
+          <li><svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Frame customization</li>
+        </ul>
+
+        <div class="quotes">
+          <blockquote class="quote">“Empath is my always-on companion – I audit key flows in seconds. It's my fastest path to product truth.”</blockquote>
+          <blockquote class="quote">“We updated all of our onboarding and sales decks in minutes! It would have taken hours without Empath.”</blockquote>
+          <blockquote class="quote">“Empath gives our team instant access to the app – no engineering support needed.”</blockquote>
         </div>
+      </section>
 
-        <div class="testimonial">
-          "Empath is my always-on companion – I audit key flows in seconds. It's my fastest path to product truth."
+      <div class="auth-card">
+        <div class="auth-body">
+          <div class="auth-heading">
+            <h1>Create your account</h1>
+          </div>
+
+          <form id="signup-form">
+            <div class="name-row">
+              <div class="form-group">
+                <label for="first-name">First name</label>
+                <input type="text" id="first-name" required placeholder="Simon" autocomplete="given-name">
+              </div>
+
+              <div class="form-group">
+                <label for="last-name">Last name</label>
+                <input type="text" id="last-name" required placeholder="Sinek" autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" required placeholder="you@company.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password <span class="hint">(6+ characters)</span></label>
+              <input type="password" id="password" required placeholder="••••••••" minlength="6" autocomplete="new-password">
+            </div>
+
+            <div class="form-group">
+              <label for="confirm-password">Confirm password</label>
+              <input type="password" id="confirm-password" required placeholder="••••••••" minlength="6" autocomplete="new-password">
+            </div>
+
+            <button type="submit" id="submit-btn" class="submit">Create Account</button>
+
+            <div class="progress-indicator" id="progress-indicator" role="status">
+              <div class="spinner" aria-hidden="true"></div>
+              Creating account…
+            </div>
+
+            <div class="message" id="form-message" role="alert"></div>
+
+            <p class="tos">
+              By creating an account, you agree to our
+              <a href="https://get-empath.com/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>.
+            </p>
+
+            <p class="switch-link">
+              Already have an account? <a href="/login" id="signin-link">Sign in</a>
+            </p>
+          </form>
         </div>
-
-        <div class="testimonial">
-          "We updated all of our onboarding and sales decks in minutes! It would have taken hours without Empath."
-        </div>
-
-        <div class="testimonial">
-          "Empath gives our team instant access to the app – no engineering support needed."
-        </div>
-      </div>
-
-      <div class="container">
-        <h1>Create Your Account</h1>
-
-        <form id="signup-form">
-          <div class="form-group">
-            <label for="first-name">First Name</label>
-            <input type="text" id="first-name" required placeholder="Simon">
-          </div>
-
-          <div class="form-group">
-            <label for="last-name">Last Name</label>
-            <input type="text" id="last-name" required placeholder="Sinek">
-          </div>
-
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" required placeholder="teamsimon@simonsinek.com">
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password <span style="color: #6c757d; font-weight: 400;">(minimum 6 characters)</span></label>
-            <input type="password" id="password" required placeholder="••••••••" minlength="6">
-          </div>
-
-          <div class="form-group">
-            <label for="confirm-password">Confirm Password</label>
-            <input type="password" id="confirm-password" required placeholder="••••••••" minlength="6">
-          </div>
-
-          <div class="buttons">
-            <button type="submit" id="submit-btn">Create Account</button>
-          </div>
-
-          <div class="progress-indicator" id="progress-indicator">
-            <div class="spinner"></div>
-            Creating account...
-          </div>
-
-          <div class="message" id="form-message"></div>
-
-          <div class="signin-link">
-            Already have an account? <a href="/login" id="signin-link">Sign in</a>
-          </div>
-
-          <div class="tos">
-            By creating an account, you agree to our
-            <a href="https://get-empath.com/terms-of-service" target="_blank">Terms of Service</a>.
-          </div>
-        </form>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     // Firebase Configuration
@@ -635,6 +596,7 @@
       ? '/login'
       : `/login?next=${encodeURIComponent(`${checkoutPath}?plan=${currentPlan}`)}`;
     document.getElementById('signin-link').href = signinUrl;
+    document.getElementById('header-signin-link').href = signinUrl;
 
     const signupForm = document.getElementById('signup-form');
     const formMessage = document.getElementById('form-message');
@@ -775,7 +737,7 @@
         
         switch (error.code) {
           case 'auth/email-already-in-use':
-            errorMessage = `This email is already registered. <a href="${signinUrl}" style="color: #667eea;">Sign in instead</a>`;
+            errorMessage = `This email is already registered. <a href="${signinUrl}">Sign in instead</a>`;
             break;
           case 'auth/weak-password':
             errorMessage = 'Password should be at least 6 characters long.';

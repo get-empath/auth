@@ -555,13 +555,9 @@
     const firestore = firebase.firestore();
 
     // Enhanced plan configurations
+    // Paid plans only: there is no free plan. Free trials come from the
+    // FastSpring products themselves.
     const planConfigs = {
-      free: {
-        name: 'Free Plan',
-        price: 'Free forever',
-        fastspringId: null,
-        description: 'Basic features included'
-      },
       monthly: {
         name: 'Pro Monthly',
         price: '$7.99/month',
@@ -576,8 +572,8 @@
       }
     };
 
-    // /enterprise serves this same page for enterprise customers: paid plans
-    // only (no free tier), and checkout continues at /enterprise/checkout,
+    // /enterprise serves this same page for enterprise customers: checkout
+    // continues at /enterprise/checkout,
     // which sells the enterprise products with the 30-day trial.
     const isEnterprise = window.location.pathname.startsWith('/enterprise');
 
@@ -586,15 +582,13 @@
     const selectedPlan = urlParams.get('plan') || 'monthly';
 
     // Validate plan
-    const validPlans = Object.keys(planConfigs).filter(plan => !(isEnterprise && plan === 'free'));
+    const validPlans = Object.keys(planConfigs);
     const currentPlan = validPlans.includes(selectedPlan) ? selectedPlan : 'monthly';
 
     // Every paid signup - and every "sign in instead" from this page - lands
     // on the checkout that matches the URL the visitor came in on.
     const checkoutPath = isEnterprise ? '/enterprise/checkout' : '/checkout';
-    const signinUrl = currentPlan === 'free'
-      ? '/login'
-      : `/login?next=${encodeURIComponent(`${checkoutPath}?plan=${currentPlan}`)}`;
+    const signinUrl = `/login?next=${encodeURIComponent(`${checkoutPath}?plan=${currentPlan}`)}`;
     document.getElementById('signin-link').href = signinUrl;
     document.getElementById('header-signin-link').href = signinUrl;
 
@@ -707,34 +701,24 @@
         // Step 3: Handle plan-specific flow
         hideProgress();
 
-        if (currentPlan === 'free') {
-          showMessage('🎉 Account created successfully! Redirecting to download...', 'success');
-          console.log('Free plan - redirecting to download page');
-          
-          setTimeout(() => {
-            window.location.href = 'https://get-empath.com/download';
-          }, 2000);
-          
-        } else {
-          // Redirect to custom checkout page instead of FastSpring popup.
-          // The new account is already signed in, and checkout takes the uid
-          // from that session - only the plan and a name for prefill go here.
-          const checkoutParams = new URLSearchParams({
-            displayName: userData.displayName,
-            plan: currentPlan,
-            source: isEnterprise ? 'enterprise_signup' : 'web_signup'
-          });
+        // Redirect to custom checkout page instead of FastSpring popup.
+        // The new account is already signed in, and checkout takes the uid
+        // from that session - only the plan and a name for prefill go here.
+        const checkoutParams = new URLSearchParams({
+          displayName: userData.displayName,
+          plan: currentPlan,
+          source: isEnterprise ? 'enterprise_signup' : 'web_signup'
+        });
 
-          const checkoutUrl = `${checkoutPath}?${checkoutParams.toString()}`;
-          
-          showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
-          console.log('Paid plan - redirecting to custom checkout:', checkoutUrl);
-          
-          // Shorter delay for better UX
-          setTimeout(() => {
-            window.location.href = checkoutUrl;
-          }, 1500);
-        }
+        const checkoutUrl = `${checkoutPath}?${checkoutParams.toString()}`;
+        
+        showMessage('✅ Account created! Redirecting to secure checkout...', 'success');
+        console.log('Paid plan - redirecting to custom checkout:', checkoutUrl);
+        
+        // Shorter delay for better UX
+        setTimeout(() => {
+          window.location.href = checkoutUrl;
+        }, 1500);
 
       } catch (error) {
         hideProgress();

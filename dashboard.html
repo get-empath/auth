@@ -422,11 +422,11 @@
       <div class="cards-grid">
         <div class="card">
           <h2>Subscription Status</h2>
-          <div id="subscription-status" class="subscription-status status-free">Free Plan</div>
+          <div id="subscription-status" class="subscription-status status-free">No active plan</div>
           <div id="subscription-details">
             <div class="plan-info">
-              <div class="plan-name" id="plan-name">Free Plan</div>
-              <div class="plan-details" id="plan-details">Basic features included</div>
+              <div class="plan-name" id="plan-name">No active plan</div>
+              <div class="plan-details" id="plan-details">Choose a plan to start using Empath</div>
             </div>
           </div>
           <div id="billing-actions">
@@ -434,7 +434,7 @@
               Manage Billing
             </a>
             <a href="/checkout?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
-              Upgrade to Pro
+              Choose a plan
             </a>
             <button class="retry-button" id="retry-data-btn" style="display: none;">
               Retry Loading Data
@@ -626,11 +626,13 @@
       }
 
       switch (status) {
+        // No subscription. 'free' is from before free plans were dropped.
+        case 'none':
         case 'free':
           statusElement.classList.add('status-free');
-          statusElement.textContent = 'Free Plan';
-          planNameElement.textContent = 'Free Plan';
-          planDetailsElement.textContent = 'Basic features included';
+          statusElement.textContent = 'No active plan';
+          planNameElement.textContent = 'No active plan';
+          planDetailsElement.textContent = 'Choose a plan to start using Empath';
           upgradeBtn.style.display = 'inline-block';
           
           // Update upgrade button with user info for checkout pre-filling
@@ -818,8 +820,8 @@
           document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
           document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
           
-          const status = userData.subscriptionStatus || 'free';
-          const plan = userData.plan || 'free';
+          const status = userData.subscriptionStatus || 'none';
+          const plan = userData.plan || 'none';
           updateSubscriptionStatus(status, plan);
           
           if (userData.fastspringCustomerId && status === 'active') {
@@ -851,7 +853,7 @@
           document.getElementById('user-email').textContent = currentUser.email;
           document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
           document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-          updateSubscriptionStatus('free', 'free');
+          updateSubscriptionStatus('none', 'none');
         }
         
         showDashboard();
@@ -979,8 +981,8 @@
           if (updatedData.subscriptionStatus !== userData.subscriptionStatus) {
             userData = updatedData;
             
-            const status = userData.subscriptionStatus || 'free';
-            const plan = userData.plan || 'free';
+            const status = userData.subscriptionStatus || 'none';
+            const plan = userData.plan || 'none';
             updateSubscriptionStatus(status, plan);
             
             // Update billing management link if needed

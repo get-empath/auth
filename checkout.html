@@ -8,6 +8,7 @@
   <!-- Firebase SDKs (checkout requires a signed-in account) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- FastSpring Embedded Checkout Script -->
   <script
@@ -593,6 +594,38 @@
       });
     }
 
+    /**
+     * Make sure the signed-in user has a users/{uid} document before paying.
+     *
+     * Sign-up normally creates it, but it gives up on a slow connection. The
+     * fastspringWebhook updates that document to grant access, and an update
+     * to a missing document fails - the customer would pay and get nothing.
+     * Never blocks checkout: a failure here is logged and checkout carries on.
+     */
+    async function ensureUserDocument(user) {
+      const userRef = firebase.firestore().collection('users').doc(user.uid);
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Firestore timeout')), 10000));
+      try {
+        await Promise.race([(async () => {
+          const snapshot = await userRef.get();
+          if (snapshot.exists) return;
+          // Profile fields only: Firestore rules reject client writes to
+          // billing state. createdVia routes enterprise accounts back to the
+          // enterprise checkout from the dashboard.
+          await userRef.set({
+            email: user.email,
+            displayName: user.displayName || urlParams.get('displayName') || '',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdVia: isEnterprise ? 'enterprise_signup' : 'checkout_auto_create'
+          }, { merge: true });
+          console.log('Created missing user document before checkout');
+        })(), timeout]);
+      } catch (error) {
+        console.warn('Could not confirm the user document:', error.message);
+      }
+    }
+
     const ERROR_ICON = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 6v4.5M10 13.5v.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
     const CHECK_ICON = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden="true"><path d="M4.5 10.5 8 14l7.5-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -914,13 +947,17 @@
         displayName: user.displayName || urlParams.get('displayName') || ''
       };
 
+      // The webhook needs this document to grant access after payment
+      const userDocumentReady = ensureUserDocument(user);
+
       // Show which account the purchase is for, beside "Secure checkout"
       if (user.email) {
         document.getElementById('account-email').textContent = user.email;
         document.getElementById('account-dot').hidden = false;
       }
 
-      setTimeout(() => {
+      setTimeout(async () => {
+        await userDocumentReady;
         if (typeof fastspring !== 'undefined' && fastspring.builder) {
           // Check if user specified a plan in URL
           const urlPlan = urlParams.get('plan');

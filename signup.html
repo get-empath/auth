@@ -680,20 +680,28 @@
           planConfig: planConfigs[currentPlan]
         };
 
-        // Use Promise.race to handle Firestore timeout
-        const FIRESTORE_TIMEOUT = 3000;
-        
-        try {
-          await Promise.race([
-            firestore.collection('users').doc(user.uid).set(userData, { merge: true }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Firestore timeout')), FIRESTORE_TIMEOUT)
-            )
-          ]);
-          console.log('Firestore document created successfully');
-        } catch (firestoreError) {
-          console.warn('Firestore write issue (continuing anyway):', firestoreError.message);
-          // Continue with the flow even if Firestore has issues
+        // Creating this document is what seeds the subscription server-side
+        // (initializeUserSubscription), so wait for it before redirecting -
+        // leaving the page cancels a write still in flight. A slow connection
+        // gets a few longer attempts rather than one 3-second try.
+        const FIRESTORE_TIMEOUT = 10000;
+        const FIRESTORE_ATTEMPTS = 3;
+
+        for (let attempt = 1; attempt <= FIRESTORE_ATTEMPTS; attempt++) {
+          try {
+            await Promise.race([
+              firestore.collection('users').doc(user.uid).set(userData, { merge: true }),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Firestore timeout')), FIRESTORE_TIMEOUT)
+              )
+            ]);
+            console.log('Firestore document created successfully');
+            break;
+          } catch (firestoreError) {
+            console.warn(`Firestore write attempt ${attempt} failed:`, firestoreError.message);
+            // The account exists either way; the dashboard creates the
+            // document if it's still missing
+          }
         }
 
         // Step 3: Handle plan-specific flow

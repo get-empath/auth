@@ -394,6 +394,23 @@
       measurementId: 'G-W10VEF7WQL'
     };
 
+    // Reset emails go through the sendPasswordReset function (Mailjet), not Firebase's mailer.
+    async function requestPasswordReset(email) {
+      let response;
+      try {
+        response = await fetch('https://us-central1-get-empath.cloudfunctions.net/sendPasswordReset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+      } catch (error) {
+        throw { code: 'auth/network-request-failed', message: error.message };
+      }
+      if (response.ok) return;
+      const codes = { 400: 'auth/invalid-email', 429: 'auth/too-many-requests' };
+      throw { code: codes[response.status] || 'auth/internal-error', message: `Password reset failed (${response.status})` };
+    }
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const firestore = firebase.firestore();
@@ -541,7 +558,7 @@
       }
 
       try {
-        await auth.sendPasswordResetEmail(email);
+        await requestPasswordReset(email);
         showMessage(`Password reset email sent to ${email}. Please check your inbox.`, 'success');
       } catch (error) {
         console.error('Password reset error:', error);

@@ -5,514 +5,389 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Empath</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <!-- Open connections early; the SDKs load at the end of <body> so the page paints first. -->
+  <link rel="preconnect" href="https://www.gstatic.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+  <link rel="preconnect" href="https://securetoken.googleapis.com">
+  <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+  <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
+  <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
 
   <style>
+    /*
+     * Tokens from the marketing site (EmpathWebsite/src/app/globals.css), as
+     * on login.html and checkout.html.
+     */
+    :root {
+      --ink-50: #f7f7f8;
+      --ink-100: #ededf0;
+      --ink-200: #d9d9df;
+      --ink-400: #8c8c9c;
+      --ink-500: #6b6b7b;
+      --ink-600: #52525f;
+      --ink-800: #26262e;
+      --ink-900: #15151a;
+      --ink-950: #0b0b0e;
+      --accent-500: #dc4733;
+      --accent-700: #ab2519;
+      --accent-800: #8a1f16;
+      --gradient-brand: linear-gradient(to right bottom, #8ac6d9, #77b4e6, #9199e5, #be75c8, #dd4a8d, #e9446b, #e94c47, #de5c1d, #e6771c, #eb9121, #f0aa2c, #f2c33c);
+      --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen';
-      background: #f8f9fa;
       margin: 0;
-      padding: 0;
       min-height: 100vh;
+      background: #fff;
+      color: var(--ink-800);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
     }
 
-    .header {
-      background: #f8f9fa;
-      padding: 30px 0 20px 0;
-      position: relative;
+    button, input { font: inherit; }
+
+    a { color: var(--accent-700); }
+    a:hover { color: var(--accent-800); }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-500);
+      outline-offset: 2px;
     }
 
-    .header-content {
-      max-width: 1200px;
+    [hidden] { display: none !important; }
+
+    .site-header {
+      max-width: 72rem;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 20px;
       display: flex;
-      justify-content: center;
       align-items: center;
-      position: relative;
+      justify-content: space-between;
+      gap: 16px;
     }
 
-    .logo {
-      height: 50px;
-      width: auto;
+    .wordmark {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--ink-900);
+      text-decoration: none;
     }
 
-    .sign-out-btn {
-      position: absolute;
-      right: 24px;
-      padding: 10px 20px;
-      border: 1px solid #e9ecef;
-      border-radius: 30px;
-      background: white;
-      color: #6c757d;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+    .wordmark:hover { color: var(--ink-900); }
 
-    .sign-out-btn:hover {
-      background: #f8f9fa;
-      border-color: #dee2e6;
-    }
-
-    .sign-out-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .main-container {
-      max-width: 1200px;
+    main {
+      max-width: 72rem;
       margin: 0 auto;
-      padding: 40px 24px;
+      padding: 8px 20px 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
     }
 
-    .welcome-section {
-      text-align: center;
-      margin-bottom: 40px;
+    @media (min-width: 640px) {
+      .site-header, main { padding-left: 32px; padding-right: 32px; }
     }
 
-    h1 {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Buttons: every button is a pill */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 0 20px;
+      border-radius: 999px;
+      border: 0;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-lg { min-height: 48px; padding: 0 24px; font-size: 16px; }
+    .btn-primary { background: var(--ink-950); color: #fff; }
+    .btn-primary:hover { background: var(--ink-800); color: #fff; }
+    .btn-secondary { background: var(--ink-100); color: var(--ink-900); }
+    .btn-secondary:hover { background: var(--ink-200); color: var(--ink-900); }
+    .btn-ghost { background: #fff; color: var(--ink-800); border: 1px solid var(--ink-200); }
+    .btn-ghost:hover { border-color: var(--ink-400); color: var(--ink-800); }
+    .btn-inverse { background: #fff; color: var(--ink-900); }
+    .btn-inverse:hover { background: var(--ink-100); color: var(--ink-900); }
+    .btn-ghost-inverse { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.4); }
+    .btn-ghost-inverse:hover { border-color: #fff; color: #fff; }
+
+    /* Gradient panel: full-strength, always moving */
+    .panel {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--gradient-brand);
+      color: #fff;
+      border-radius: 16px;
+      padding: 64px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 28px;
+    }
+
+    @media (max-width: 639px) { .panel { padding: 48px 24px; } }
+
+    .plate { position: absolute; inset: 0; z-index: -1; }
+    .p1 {
+      background: conic-gradient(from 0deg at 42% 58%, #8ac6d9, #77b4e6, #9199e5, #dd4a8d, #e94c47, #e6771c, #f2c33c, #8ac6d9);
+      filter: blur(64px) saturate(115%);
+      animation: swirl 26s linear infinite;
+    }
+    .p2 {
+      background: conic-gradient(from 120deg at 62% 40%, #9199e5, #dd4a8d, #e94c47, #e6771c, #9199e5);
+      filter: blur(80px);
+      mix-blend-mode: multiply;
+      opacity: 0.35;
+      animation: swirl 18s linear infinite reverse;
+    }
+    @keyframes swirl {
+      from { transform: rotate(0) scale(2); }
+      to { transform: rotate(360deg) scale(2); }
+    }
+
+    .panel h1 {
       margin: 0;
-      color: #1a1a1a;
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: -0.05rem;
+      font-size: clamp(2.5rem, 1.4rem + 4.4vw, 4.75rem);
+      line-height: 1.04;
+      letter-spacing: -0.033em;
+      font-weight: 800;
+      text-wrap: balance;
+      text-shadow: 0 1px 24px rgba(90, 20, 30, 0.25);
     }
 
-    .cards-grid {
+    .panel-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
     }
 
     .card {
-      background: white;
+      border: 1px solid var(--ink-200);
       border-radius: 12px;
-      border: 1px solid #e1e5e9;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    .card h2 {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      margin: 0 0 16px 0;
-      color: #1a1a1a;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02rem;
-    }
+    @media (max-width: 639px) { .card { padding: 24px; } }
 
-    .card p {
-      color: #6c757d;
-      margin: 0 0 16px 0;
-      line-height: 1.5;
-    }
-
-    .subscription-status {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 30px;
+    .eyebrow {
+      margin: 0;
       font-size: 12px;
       font-weight: 600;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 16px;
+      color: var(--ink-900);
     }
 
-    .status-free {
-      background: #e9ecef;
-      color: #495057;
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-900);
     }
 
-    .status-active {
-      background: #d1e7dd;
-      color: #0f5132;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ink-900);
     }
 
-    .status-trial {
-      background: #cfe2ff;
-      color: #084298;
-    }
-
-    .status-pending {
-      background: #fff3cd;
-      color: #664d03;
-    }
-
-    .status-canceled {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .status-offline {
-      background: #f1f3f4;
-      color: #5f6368;
-    }
-
-    .plan-info {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
+    .status[data-tone="muted"] { color: var(--ink-600); }
+    .status[data-tone="muted"] .status-dot { background: transparent; border: 1.5px solid var(--ink-500); }
 
     .plan-name {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 4px;
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
     }
 
     .plan-details {
-      font-size: 14px;
-      color: #6c757d;
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--ink-500);
     }
 
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-      text-align: center;
-    }
-
-    .button-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-    }
-
-    .button-primary:hover {
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-      transform: translateY(-1px);
-      color: white;
-    }
-
-    .download-links {
+    .card-actions {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 12px;
-      margin-top: 20px;
+      margin-top: auto;
+      padding-top: 8px;
     }
 
-    .download-link {
+    .field {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      padding: 16px;
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 30px;
-      text-decoration: none;
-      color: #495057;
-      transition: all 0.2s ease;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--ink-100);
+      min-height: 69px;
     }
 
-    .download-link:hover {
-      background: white;
-      border-color: #667eea;
-      color: #667eea;
-    }
+    .field:last-child { border-bottom: 0; }
 
-    .download-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 12px;
-      opacity: 0.7;
-    }
-
-    .loading-state {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 400px;
-      flex-direction: column;
-    }
-
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid rgba(102, 126, 234, 0.3);
-      border-radius: 50%;
-      border-top-color: #667eea;
-      animation: spin 1s linear infinite;
-      margin-bottom: 16px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      color: #6c757d;
+    .field-label {
+      width: 110px;
       font-size: 14px;
+      color: var(--ink-500);
     }
 
-    .error-message {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
-      padding: 16px;
+    .field-value {
+      flex: 1;
+      min-width: 0;
+      font-size: 16px;
+      color: var(--ink-900);
+      overflow-wrap: anywhere;
+    }
+
+    .field-input {
+      flex: 1;
+      min-width: 140px;
+      font-size: 16px;
+      color: var(--ink-900);
+      padding: 9px 12px;
+      border: 1px solid var(--ink-200);
       border-radius: 8px;
-      text-align: center;
-      margin: 20px 0;
     }
 
-    .retry-button {
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 30px;
+    .field-input:focus-visible { outline-offset: 0; }
+
+    .field-error {
+      width: 100%;
+      margin: 0;
       font-size: 14px;
-      cursor: pointer;
-      margin-top: 12px;
+      color: var(--accent-700);
     }
 
-    .retry-button:hover {
-      background: #5a67d8;
+    /* Loading placeholders: neutral, sized like the text they stand in for */
+    .skeleton .sk {
+      display: block;
+      border-radius: 6px;
+      background: var(--ink-100);
+      color: transparent !important;
+      animation: pulse 1.4s ease-in-out infinite;
     }
+    .skeleton .sk * { visibility: hidden; }
+    @keyframes pulse { 50% { opacity: 0.55; } }
 
-    /* Account info editing styles */
-    .info-row {
+    .notice {
+      border: 1px solid var(--ink-200);
+      background: var(--ink-50);
+      border-radius: 12px;
+      padding: 16px 20px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      margin-bottom: 12px;
-      padding: 8px 0;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 15px;
+      color: var(--ink-800);
     }
 
-    .info-label {
-      font-weight: 600;
-      color: #495057;
-      min-width: 100px;
-      margin-right: 12px;
-    }
-
-    .info-value {
-      flex: 1;
-      color: #6c757d;
-    }
-
-    .editable-field {
-      display: flex;
-      align-items: center;
-      flex: 1;
-    }
-
-    .edit-input {
-      display: none;
-      flex: 1;
-      padding: 6px 12px;
-      border: 1px solid #e9ecef;
-      border-radius: 4px;
-      font-size: 14px;
-      margin-right: 8px;
-    }
-
-    .edit-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .edit-actions {
-      display: none;
-      gap: 8px;
-    }
-
-    .edit-btn {
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .save-btn {
-      background: #28a745;
-      color: white;
-    }
-
-    .cancel-btn {
-      background: #6c757d;
-      color: white;
-    }
-
-    .edit-icon {
-      width: 16px;
-      height: 16px;
-      margin-left: 8px;
-      cursor: pointer;
-      opacity: 0.5;
-      transition: opacity 0.2s ease;
-    }
-
-    .edit-icon:hover {
-      opacity: 0.8;
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .header-content {
-        padding: 0 16px;
-      }
-      
-      .sign-out-btn {
-        position: static;
-        margin-top: 20px;
-      }
-      
-      .main-container {
-        padding: 24px 16px;
-      }
-      
-      .card {
-        padding: 24px 20px;
-      }
-      
-      h1 {
-        font-size: 24px;
-      }
-      
-      .cards-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .info-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .info-label {
-        min-width: auto;
-        margin-right: 0;
-        margin-bottom: 4px;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      .plate { animation: none; transform: rotate(30deg) scale(2); }
+      .skeleton .sk { animation: none; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-content">
-      <a href="https://www.get-empath.com">
-        <img src="https://images.squarespace-cdn.com/content/v1/67b5499db71bd36240b6d2d7/994c48e7-65c4-47cc-b846-d47db72c04b9/EmpathLogo.png?format=1500w" alt="Empath" class="logo">
-      </a>
-      <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
-    </div>
-  </div>
+  <header class="site-header">
+    <a class="wordmark" href="https://www.get-empath.com">Empath</a>
+    <button class="btn btn-ghost" id="sign-out-btn" type="button">Sign out</button>
+  </header>
 
-  <div class="main-container">
-    <div id="loading-state" class="loading-state">
-      <div class="spinner"></div>
-      <div class="loading-text">Loading your dashboard...</div>
+  <main id="dashboard" class="skeleton" aria-busy="true">
+    <div id="notice" class="notice" role="alert" hidden>
+      <span id="notice-text"></span>
+      <button class="btn btn-secondary" id="retry-btn" type="button">Try again</button>
     </div>
 
-    <div id="dashboard-content" style="display: none;">
-      <div class="welcome-section">
-        <h1 id="welcome-message">Welcome back!</h1>
+    <section class="panel" aria-labelledby="welcome-message">
+      <div class="plate p1"></div>
+      <div class="plate p2"></div>
+      <h1 id="welcome-message">Welcome.</h1>
+      <div class="panel-actions">
+        <a class="btn btn-lg btn-inverse" href="https://get-empath.com/download/">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Download for macOS
+        </a>
       </div>
+    </section>
 
-      <div class="cards-grid">
-        <div class="card">
-          <h2>Subscription Status</h2>
-          <div id="subscription-status" class="subscription-status status-free">No active plan</div>
-          <div id="subscription-details">
-            <div class="plan-info">
-              <div class="plan-name" id="plan-name">No active plan</div>
-              <div class="plan-details" id="plan-details">Choose a plan to start using Empath</div>
-            </div>
+    <div class="cards">
+      <section class="card" aria-labelledby="subscription-heading">
+        <h2 class="eyebrow" id="subscription-heading">Subscription</h2>
+        <div class="status sk" id="subscription-status"><span class="status-dot"></span><span id="status-text">Loading</span></div>
+        <p class="plan-name sk" id="plan-name">Loading plan</p>
+        <p class="plan-details sk" id="plan-details">Loading plan details</p>
+        <div class="card-actions">
+          <a class="btn btn-primary" id="manage-billing-btn" href="https://empath.onfastspring.com/account" target="_blank" rel="noopener" hidden>Manage billing</a>
+          <a class="btn btn-primary" id="upgrade-btn" href="/checkout?plan=monthly" hidden>Choose a plan</a>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="account-heading">
+        <h2 class="eyebrow" id="account-heading">Account</h2>
+        <div>
+          <div class="field" data-field="firstName">
+            <span class="field-label" id="first-name-label">First name</span>
+            <span class="field-value sk" data-role="value">Loading</span>
+            <input class="field-input" data-role="input" type="text" autocomplete="given-name" aria-labelledby="first-name-label" hidden>
+            <button class="btn btn-ghost" data-role="edit" type="button" aria-label="Edit first name">Edit</button>
+            <button class="btn btn-primary" data-role="save" type="button" hidden>Save</button>
+            <button class="btn btn-secondary" data-role="cancel" type="button" hidden>Cancel</button>
+            <p class="field-error" data-role="error" hidden></p>
           </div>
-          <div id="billing-actions">
-            <a href="#" class="button button-primary" id="manage-billing-btn" target="_blank" style="display: none;">
-              Manage Billing
-            </a>
-            <a href="/checkout?plan=monthly" class="button button-primary" id="upgrade-btn" style="display: none;">
-              Choose a plan
-            </a>
-            <button class="retry-button" id="retry-data-btn" style="display: none;">
-              Retry Loading Data
-            </button>
+          <div class="field" data-field="lastName">
+            <span class="field-label" id="last-name-label">Last name</span>
+            <span class="field-value sk" data-role="value">Loading</span>
+            <input class="field-input" data-role="input" type="text" autocomplete="family-name" aria-labelledby="last-name-label" hidden>
+            <button class="btn btn-ghost" data-role="edit" type="button" aria-label="Edit last name">Edit</button>
+            <button class="btn btn-primary" data-role="save" type="button" hidden>Save</button>
+            <button class="btn btn-secondary" data-role="cancel" type="button" hidden>Cancel</button>
+            <p class="field-error" data-role="error" hidden></p>
+          </div>
+          <div class="field">
+            <span class="field-label">Email</span>
+            <span class="field-value sk" id="user-email">Loading</span>
+          </div>
+          <div class="field" id="activation-row" hidden>
+            <span class="field-label">Active since</span>
+            <span class="field-value" id="activation-date-text"></span>
           </div>
         </div>
-
-        <div class="card">
-          <h2>Download Empath</h2>
-          <p>Get the latest version of Empath:</p>
-          
-          <div class="download-links">
-            <a href="https://get-empath.com/download/" class="download-link">
-              <svg class="download-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/>
-              </svg>
-              macOS
-            </a>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Account Information</h2>
-          <div id="account-details">
-            <div class="info-row">
-              <span class="info-label">First Name:</span>
-              <div class="editable-field">
-                <span class="info-value" id="first-name-display">Loading...</span>
-                <input type="text" class="edit-input" id="first-name-input">
-                <div class="edit-actions">
-                  <button class="edit-btn save-btn" onclick="saveField('firstName')">Save</button>
-                  <button class="edit-btn cancel-btn" onclick="cancelEdit('firstName')">Cancel</button>
-                </div>
-                <svg class="edit-icon" onclick="editField('firstName')" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/>
-                </svg>
-              </div>
-            </div>
-
-            <div class="info-row">
-              <span class="info-label">Last Name:</span>
-              <div class="editable-field">
-                <span class="info-value" id="last-name-display">Loading...</span>
-                <input type="text" class="edit-input" id="last-name-input">
-                <div class="edit-actions">
-                  <button class="edit-btn save-btn" onclick="saveField('lastName')">Save</button>
-                  <button class="edit-btn cancel-btn" onclick="cancelEdit('lastName')">Cancel</button>
-                </div>
-                <svg class="edit-icon" onclick="editField('lastName')" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3,17.25V21H6.75L17.81,9.94L14.06,6.19L3,17.25M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.13,5.12L18.88,8.87L20.71,7.04Z"/>
-                </svg>
-              </div>
-            </div>
-
-            <div class="info-row">
-              <span class="info-label">Email:</span>
-              <span class="info-value" id="user-email">Loading...</span>
-            </div>
-
-            <div id="activation-date" style="display: none;">
-              <div class="info-row">
-                <span class="info-label">Active Since:</span>
-                <span class="info-value" id="activation-date-text">Loading...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
+  </main>
 
-    <div id="error-state" class="error-message" style="display: none;">
-      <div>Failed to load dashboard data.</div>
-      <button class="retry-button" id="retry-btn">Retry Loading</button>
-    </div>
-  </div>
-
+  <!-- Firebase SDKs (preloaded in <head>) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script>
-    // Firebase Configuration
     const firebaseConfig = {
       apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
       authDomain: 'auth.get-empath.com',
@@ -526,19 +401,30 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const firestore = firebase.firestore();
-    
-    // Enable Firestore offline persistence
-    try {
-      firestore.enablePersistence({ synchronizeTabs: true })
-        .catch((err) => {
-          console.warn('Firestore persistence error:', err.message);
-        });
-    } catch (err) {
-      console.warn('Firestore persistence setup error:', err.message);
-    }
+
+    // The local cache lets a returning visit render from IndexedDB at once,
+    // then the live listener corrects it when the server answers.
+    firestore.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+      console.warn('Firestore persistence unavailable:', err.code || err.message);
+    });
+
+    // FastSpring is never called from this page. Its webhook writes the
+    // subscription fields onto users/{uid}, so this one document is the
+    // whole read, and the listener picks up webhook updates live.
+    const LOAD_TIMEOUT_MS = 10000;
+    const PLANS = {
+      monthly: { name: 'Pro Monthly', details: '$7.99/month · Full access to all features' },
+      annual: { name: 'Pro Annual', details: '$79.99/year · Save 17% with annual billing' }
+    };
 
     let currentUser = null;
     let userData = null;
+    let unsubscribeUserDoc = null;
+    let loadTimer = null;
+    let creatingDoc = false;
+    let signingOut = false;
+
+    const $ = (id) => document.getElementById(id);
 
     // Enterprise accounts go back to the enterprise checkout (30-day trial
     // products); checkout itself reads the uid from the signed-in session.
@@ -547,489 +433,303 @@
         ? '/enterprise/checkout'
         : '/checkout';
     }
-    let retryAttempts = 0;
-    const maxRetryAttempts = 3;
-    let userDocListener = null;
 
-    // Format date helper
     function formatDate(timestamp) {
-      if (!timestamp) return 'Unknown';
-      
-      try {
-        let date;
-        if (timestamp.toDate) {
-          date = timestamp.toDate();
-        } else if (timestamp instanceof Date) {
-          date = timestamp;
-        } else {
-          date = new Date(timestamp);
-        }
-        
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-      } catch (error) {
-        return 'Date error';
-      }
+      if (!timestamp) return '';
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      if (isNaN(date)) return '';
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    // Show loading state
-    function showLoading(message = 'Loading your dashboard...') {
-      document.getElementById('loading-state').style.display = 'flex';
-      document.querySelector('.loading-text').textContent = message;
-      document.getElementById('dashboard-content').style.display = 'none';
-      document.getElementById('error-state').style.display = 'none';
+    function showNotice(message) {
+      $('notice-text').textContent = message;
+      $('notice').hidden = false;
     }
 
-    // Show dashboard content
-    function showDashboard() {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('dashboard-content').style.display = 'block';
-      document.getElementById('error-state').style.display = 'none';
+    function hideNotice() {
+      $('notice').hidden = true;
     }
 
-    // Show error state
-    function showError(message = 'Failed to load dashboard data.') {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('dashboard-content').style.display = 'none';
-      document.getElementById('error-state').style.display = 'block';
-      document.getElementById('error-state').querySelector('div').textContent = message;
+    function markLoaded() {
+      const main = $('dashboard');
+      main.classList.remove('skeleton');
+      main.removeAttribute('aria-busy');
     }
 
-    // Update subscription status display
-    function updateSubscriptionStatus(status, plan) {
-      const statusElement = document.getElementById('subscription-status');
-      const planNameElement = document.getElementById('plan-name');
-      const planDetailsElement = document.getElementById('plan-details');
-      const manageBillingBtn = document.getElementById('manage-billing-btn');
-      const upgradeBtn = document.getElementById('upgrade-btn');
-      const retryBtn = document.getElementById('retry-data-btn');
-      const activationDateDiv = document.getElementById('activation-date');
+    function checkoutHref(source) {
+      const params = new URLSearchParams({
+        displayName: (userData && userData.firstName) || currentUser.email.split('@')[0],
+        plan: 'monthly',
+        source
+      });
+      return `${getCheckoutPath()}?${params.toString()}`;
+    }
 
-      // Reset classes and visibility
-      statusElement.className = 'subscription-status';
-      manageBillingBtn.style.display = 'none';
-      upgradeBtn.style.display = 'none';
-      retryBtn.style.display = 'none';
-      activationDateDiv.style.display = 'none';
+    function renderSubscription() {
+      const status = userData.subscriptionStatus || 'none';
+      const statusEl = $('subscription-status');
+      const manageBtn = $('manage-billing-btn');
+      const upgradeBtn = $('upgrade-btn');
+      let label, name, details, tone = 'solid';
 
-      // Handle offline state
-      if (!navigator.onLine && !status) {
-        statusElement.classList.add('status-offline');
-        statusElement.textContent = 'Offline';
-        planNameElement.textContent = 'Unable to load';
-        planDetailsElement.textContent = 'Please check your internet connection';
-        retryBtn.style.display = 'inline-block';
-        return;
-      }
+      manageBtn.hidden = true;
+      upgradeBtn.hidden = true;
+      $('activation-row').hidden = true;
 
       switch (status) {
         // No subscription. 'free' is from before free plans were dropped.
         case 'none':
         case 'free':
-          statusElement.classList.add('status-free');
-          statusElement.textContent = 'No active plan';
-          planNameElement.textContent = 'No active plan';
-          planDetailsElement.textContent = 'Choose a plan to start using Empath';
-          upgradeBtn.style.display = 'inline-block';
-          
-          // Update upgrade button with user info for checkout pre-filling
-          if (currentUser && userData) {
-            const upgradeParams = new URLSearchParams({
-              displayName: userData.firstName || currentUser.email.split('@')[0],
-              plan: 'monthly',
-              source: 'dashboard_upgrade'
-            });
-            upgradeBtn.href = `${getCheckoutPath()}?${upgradeParams.toString()}`;
-          }
+          label = 'No active plan';
+          tone = 'muted';
+          name = 'No active plan';
+          details = 'Choose a plan to start using Empath.';
+          upgradeBtn.textContent = 'Choose a plan';
+          upgradeBtn.href = checkoutHref('dashboard_upgrade');
+          upgradeBtn.hidden = false;
           break;
 
-        case 'active':
-          statusElement.classList.add('status-active');
-          statusElement.textContent = 'Active';
-          
-          if (plan === 'monthly') {
-            planNameElement.textContent = 'Pro Monthly';
-            planDetailsElement.textContent = '$7.99/month - Full access to all features';
-          } else if (plan === 'annual') {
-            planNameElement.textContent = 'Pro Annual';
-            planDetailsElement.textContent = '$79.99/year - Save 17% with annual billing';
-          } else {
-            planNameElement.textContent = 'Pro Plan';
-            planDetailsElement.textContent = 'Full access to all features';
-          }
-          
-          manageBillingBtn.style.display = 'inline-block';
-          
-          // Show activation date if available
-          if (userData && userData.subscriptionActivatedAt) {
-            activationDateDiv.style.display = 'block';
-            document.getElementById('activation-date-text').textContent = formatDate(userData.subscriptionActivatedAt);
+        case 'active': {
+          const plan = PLANS[userData.plan] || { name: 'Pro Plan', details: 'Full access to all features' };
+          label = 'Active';
+          name = plan.name;
+          details = plan.details;
+          manageBtn.hidden = false;
+          const since = formatDate(userData.subscriptionActivatedAt);
+          if (since) {
+            $('activation-date-text').textContent = since;
+            $('activation-row').hidden = false;
           }
           break;
+        }
 
-        case 'trial':
-          statusElement.classList.add('status-trial');
-          statusElement.textContent = 'Free Trial';
-          planNameElement.textContent = 'Free Trial';
-          planDetailsElement.textContent = userData && userData.nextChargeDate
-            ? `Full access to all features - billing starts ${formatDate(userData.nextChargeDate)}`
-            : 'Full access to all features during your trial';
-          manageBillingBtn.style.display = 'inline-block';
+        case 'trial': {
+          const billingStarts = formatDate(userData.nextChargeDate);
+          label = 'Free trial';
+          name = 'Free Trial';
+          details = billingStarts
+            ? `Full access to all features. Billing starts ${billingStarts}.`
+            : 'Full access to all features during your trial.';
+          manageBtn.hidden = false;
           break;
+        }
 
         case 'pending':
-          statusElement.classList.add('status-pending');
-          statusElement.textContent = 'Pending';
-          planNameElement.textContent = 'Subscription Pending';
-          planDetailsElement.textContent = 'Your subscription is being processed';
+          label = 'Pending';
+          tone = 'muted';
+          name = 'Subscription pending';
+          details = 'Your payment is being processed. This page updates on its own when it clears.';
           break;
 
         case 'canceled':
-          statusElement.classList.add('status-canceled');
-          statusElement.textContent = 'Canceled';
-          planNameElement.textContent = 'Subscription Canceled';
-          planDetailsElement.textContent = 'Your subscription has been canceled';
-          upgradeBtn.style.display = 'inline-block';
-          
-          // Update upgrade button with user info for checkout pre-filling
-          if (currentUser && userData) {
-            const upgradeParams = new URLSearchParams({
-              displayName: userData.firstName || currentUser.email.split('@')[0],
-              plan: 'monthly',
-              source: 'dashboard_reactivate'
-            });
-            upgradeBtn.href = `${getCheckoutPath()}?${upgradeParams.toString()}`;
-          }
+          label = 'Canceled';
+          tone = 'muted';
+          name = 'Subscription canceled';
+          details = 'Your subscription has been canceled.';
+          upgradeBtn.textContent = 'Reactivate';
+          upgradeBtn.href = checkoutHref('dashboard_reactivate');
+          upgradeBtn.hidden = false;
           break;
 
         default:
-          statusElement.classList.add('status-free');
-          statusElement.textContent = 'Unknown Status';
-          planNameElement.textContent = 'Unknown Plan';
-          planDetailsElement.textContent = 'Please contact support if this persists';
-          retryBtn.style.display = 'inline-block';
+          label = 'Unknown status';
+          tone = 'muted';
+          name = 'Unknown plan';
+          details = 'Please contact support if this persists.';
+      }
+
+      statusEl.dataset.tone = tone;
+      $('status-text').textContent = label;
+      $('plan-name').textContent = name;
+      $('plan-details').textContent = details;
+    }
+
+    function renderField(fieldName) {
+      const row = document.querySelector(`[data-field="${fieldName}"]`);
+      // Leave a field alone while it is being edited.
+      if (!row.querySelector('[data-role="input"]').hidden) return;
+      row.querySelector('[data-role="value"]').textContent = userData[fieldName] || 'Not set';
+    }
+
+    // Single render path for the cached snapshot, the server snapshot and
+    // every live update after them.
+    function render() {
+      $('welcome-message').textContent = userData.firstName
+        ? `Welcome, ${userData.firstName}.`
+        : 'Welcome.';
+      $('user-email').textContent = userData.email || currentUser.email;
+      renderField('firstName');
+      renderField('lastName');
+      renderSubscription();
+      markLoaded();
+    }
+
+    async function createUserDoc(userId) {
+      if (creatingDoc) return;
+      creatingDoc = true;
+      // No entitlement fields here - FastSpring owns those and Firestore
+      // rules reject client writes to them. A document carrying none of
+      // them reads as no access, which is the correct default.
+      const displayName = currentUser.displayName || '';
+      const basicUserData = {
+        email: currentUser.email,
+        firstName: displayName.split(' ')[0] || '',
+        lastName: displayName.split(' ').slice(1).join(' '),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdVia: 'dashboard_auto_create',
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        // The listener renders the new document as soon as it is written.
+        await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
+      } catch (error) {
+        console.error('Could not create user document:', error);
+        showNotice('We could not set up your account. Please try again.');
+      } finally {
+        creatingDoc = false;
       }
     }
 
-    // Inline editing functions
-    function editField(fieldName) {
-      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
-      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
-      const actions = input.parentNode.querySelector('.edit-actions');
-      const icon = input.parentNode.querySelector('.edit-icon');
-
-      display.style.display = 'none';
-      input.style.display = 'block';
-      actions.style.display = 'flex';
-      icon.style.display = 'none';
-      
-      input.value = display.textContent;
-      input.focus();
+    function handleLoadError(error) {
+      console.error('Dashboard load failed:', error);
+      clearTimeout(loadTimer);
+      if (error.code === 'permission-denied') {
+        showNotice('Access denied. Please sign out and sign in again.');
+      } else {
+        showNotice('We could not load your account. Check your connection and try again.');
+      }
     }
 
-    function cancelEdit(fieldName) {
-      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
-      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
-      const actions = input.parentNode.querySelector('.edit-actions');
-      const icon = input.parentNode.querySelector('.edit-icon');
+    function subscribeToUser(userId) {
+      if (unsubscribeUserDoc) unsubscribeUserDoc();
+      hideNotice();
 
-      display.style.display = 'block';
-      input.style.display = 'none';
-      actions.style.display = 'none';
-      icon.style.display = 'block';
+      // Only an empty page needs a timeout; cached data on screen can wait.
+      clearTimeout(loadTimer);
+      loadTimer = setTimeout(() => {
+        if (!userData) showNotice('This is taking longer than usual. Check your connection and try again.');
+      }, LOAD_TIMEOUT_MS);
+
+      unsubscribeUserDoc = firestore.collection('users').doc(userId).onSnapshot(
+        { includeMetadataChanges: true },
+        (doc) => {
+          if (doc.exists) {
+            userData = doc.data();
+            render();
+            if (!doc.metadata.fromCache) {
+              clearTimeout(loadTimer);
+              hideNotice();
+            }
+          } else if (!doc.metadata.fromCache) {
+            // Only the server can say the document is truly missing.
+            clearTimeout(loadTimer);
+            createUserDoc(userId);
+          }
+        },
+        handleLoadError
+      );
     }
 
-    async function saveField(fieldName) {
-      const display = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-display`);
-      const input = document.getElementById(`${fieldName.toLowerCase().replace('name', '-name')}-input`);
-      const actions = input.parentNode.querySelector('.edit-actions');
-      const icon = input.parentNode.querySelector('.edit-icon');
+    // Inline editing
+    function setEditing(row, editing) {
+      const input = row.querySelector('[data-role="input"]');
+      row.querySelector('[data-role="value"]').hidden = editing;
+      row.querySelector('[data-role="edit"]').hidden = editing;
+      row.querySelector('[data-role="save"]').hidden = !editing;
+      row.querySelector('[data-role="cancel"]').hidden = !editing;
+      row.querySelector('[data-role="error"]').hidden = true;
+      input.hidden = !editing;
+      if (editing) {
+        input.value = (userData && userData[row.dataset.field]) || '';
+        input.focus();
+      } else {
+        row.querySelector('[data-role="edit"]').focus();
+      }
+    }
 
+    async function saveField(row) {
+      const fieldName = row.dataset.field;
+      const input = row.querySelector('[data-role="input"]');
+      const saveBtn = row.querySelector('[data-role="save"]');
+      const errorEl = row.querySelector('[data-role="error"]');
       const newValue = input.value.trim();
+
       if (!newValue) {
-        alert('Field cannot be empty');
+        errorEl.textContent = 'This field can’t be empty.';
+        errorEl.hidden = false;
+        input.focus();
         return;
       }
 
+      saveBtn.disabled = true;
       try {
-        // Update Firestore
-        await firestore.collection('users').doc(currentUser.uid).update({
-          [fieldName]: newValue
-        });
-
-        // Update local data and UI
+        await firestore.collection('users').doc(currentUser.uid).update({ [fieldName]: newValue });
         userData[fieldName] = newValue;
-        if (fieldName === 'firstName' || fieldName === 'lastName') {
-          userData.displayName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
-          document.getElementById('welcome-message').textContent = `Welcome back, ${userData.firstName || 'there'}!`;
-        }
-
-        display.textContent = newValue;
-        cancelEdit(fieldName);
-
+        setEditing(row, false);
+        render();
       } catch (error) {
         console.error('Error updating field:', error);
-        alert('Failed to update information. Please try again.');
+        errorEl.textContent = 'Couldn’t save. Please try again.';
+        errorEl.hidden = false;
+      } finally {
+        saveBtn.disabled = false;
       }
     }
 
-    // Load user data from Firestore with enhanced debugging
-    async function loadUserData(userId, isRetry = false) {
-      const attemptNumber = retryAttempts + 1;
-      
-      console.log('=== Loading user data ===');
-      console.log('User ID:', userId);
-      console.log('Is retry:', isRetry);
-      console.log('Retry attempt:', attemptNumber);
-      
-      if (isRetry) {
-        showLoading('Retrying data load...');
-      }
+    document.querySelectorAll('[data-field]').forEach((row) => {
+      row.querySelector('[data-role="edit"]').addEventListener('click', () => setEditing(row, true));
+      row.querySelector('[data-role="cancel"]').addEventListener('click', () => setEditing(row, false));
+      row.querySelector('[data-role="save"]').addEventListener('click', () => saveField(row));
+      row.querySelector('[data-role="input"]').addEventListener('keydown', (e) => {
+        // preventDefault stops the same Enter from then clicking the Edit
+        // button, which takes focus once the save resolves.
+        if (e.key === 'Enter') { e.preventDefault(); saveField(row); }
+        if (e.key === 'Escape') { e.preventDefault(); setEditing(row, false); }
+      });
+    });
 
-      try {
-        if (!auth.currentUser) {
-          throw new Error('User not authenticated');
-        }
-
-        console.log('Making Firestore request...');
-        
-        // Use shorter timeout on retries
-        const timeoutDuration = isRetry ? 7000 : 10000;
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Firestore request timeout after ${timeoutDuration/1000} seconds`)), timeoutDuration);
-        });
-
-        const userDocPromise = firestore.collection('users').doc(userId).get();
-        const userDoc = await Promise.race([userDocPromise, timeoutPromise]);
-        
-        console.log('Firestore response received, document exists:', userDoc.exists);
-        
-        if (userDoc.exists) {
-          userData = userDoc.data();
-          console.log('Document data loaded successfully');
-          
-          // Update UI
-          const displayName = userData.firstName || 'there';
-          document.getElementById('welcome-message').textContent = `Welcome back, ${displayName}!`;
-          
-          const email = userData.email || currentUser.email;
-          document.getElementById('user-email').textContent = email;
-          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-          
-          const status = userData.subscriptionStatus || 'none';
-          const plan = userData.plan || 'none';
-          updateSubscriptionStatus(status, plan);
-          
-          if (userData.fastspringCustomerId && status === 'active') {
-            const manageBillingBtn = document.getElementById('manage-billing-btn');
-            manageBillingBtn.href = 'https://empath.onfastspring.com/account';
-          }
-          
-          retryAttempts = 0;
-          
-        } else {
-          console.log('Document does not exist, creating new one...');
-          
-          // No entitlement fields here - FastSpring owns those and Firestore
-          // rules reject client writes to them. A document carrying none of
-          // them reads as no access, which is the correct default.
-          const basicUserData = {
-            email: currentUser.email,
-            firstName: currentUser.displayName ? currentUser.displayName.split(' ')[0] : '',
-            lastName: currentUser.displayName ? currentUser.displayName.split(' ').slice(1).join(' ') : '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            createdVia: 'dashboard_auto_create',
-            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
-          };
-          
-          await firestore.collection('users').doc(userId).set(basicUserData, { merge: true });
-          userData = basicUserData;
-          
-          document.getElementById('welcome-message').textContent = `Welcome, ${userData.firstName || 'there'}!`;
-          document.getElementById('user-email').textContent = currentUser.email;
-          document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-          document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-          updateSubscriptionStatus('none', 'none');
-        }
-        
-        showDashboard();
-        console.log('=== User data loading completed successfully ===');
-        
-      } catch (error) {
-        console.error('=== Error loading user data ===');
-        console.error('Error:', error.message);
-        
-        retryAttempts++;
-        
-        if (error.message.includes('timeout')) {
-          if (retryAttempts < maxRetryAttempts) {
-            console.log(`Retrying after timeout (attempt ${retryAttempts + 1}/${maxRetryAttempts})`);
-            const delay = Math.min(3000 * Math.pow(2, retryAttempts - 1), 8000);
-            setTimeout(() => {
-              loadUserData(userId, true);
-            }, delay);
-          } else {
-            showError('Server response timeout. Please try refreshing the page.');
-          }
-        } else if (error.code === 'permission-denied') {
-          showError('Access denied. Please sign out and sign in again.');
-        } else if (error.code === 'unavailable') {
-          if (retryAttempts < maxRetryAttempts) {
-            setTimeout(() => {
-              loadUserData(userId, true);
-            }, 3000);
-          } else {
-            showError('Unable to connect to our servers. Please check your internet connection.');
-          }
-        } else {
-          showError(`Failed to load account data: ${error.message}`);
-        }
-      }
-    }
-
-    // Manual retry function
-    function retryLoadUserData() {
-      if (currentUser) {
-        retryAttempts = 0;
-        loadUserData(currentUser.uid, true);
-      }
-    }
-
-    // Clean sign out function
     async function cleanSignOut() {
-      try {
-        console.log('Starting sign out process...');
-        
-        const btn = document.getElementById('sign-out-btn');
-        btn.textContent = 'Signing Out...';
-        btn.disabled = true;
-        
-        // Remove real-time listeners
-        if (userDocListener) {
-          console.log('Removing Firestore listener...');
-          userDocListener();
-          userDocListener = null;
-        }
-        
-        // Clear Firestore cache if possible
-        try {
-          await firestore.clearPersistence();
-          console.log('Firestore cache cleared');
-        } catch (error) {
-          console.log('Firestore cache clear skipped (app in use):', error.message);
-        }
-        
-        // Sign out from Firebase Auth
-        console.log('Signing out from Firebase Auth...');
-        await auth.signOut();
-        
-        // Clear local storage items related to Firebase
-        try {
-          const keysToRemove = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.startsWith('firebase:') || key.startsWith('firebaseui'))) {
-              keysToRemove.push(key);
-            }
-          }
-          keysToRemove.forEach(key => localStorage.removeItem(key));
-          console.log('Firebase localStorage items cleared');
-        } catch (error) {
-          console.log('localStorage clearing failed:', error.message);
-        }
-        
-        console.log('Sign out completed successfully');
-        
-        // Redirect to login
-        window.location.href = '/login';
-        
-      } catch (error) {
-        console.error('Error during sign out:', error);
-        
-        // Force navigation even if cleanup failed
-        window.location.href = '/login';
+      const btn = $('sign-out-btn');
+      btn.textContent = 'Signing out…';
+      btn.disabled = true;
+      signingOut = true;
+
+      if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
       }
+
+      try {
+        await auth.signOut();
+        // clearPersistence only works once Firestore is terminated; without
+        // this the cached user document stayed on the device.
+        await firestore.terminate();
+        await firestore.clearPersistence();
+      } catch (error) {
+        console.warn('Sign-out cleanup incomplete:', error.message);
+      }
+
+      window.location.href = '/login';
     }
 
-    // Authentication state handler
-    auth.onAuthStateChanged(async (user) => {
+    $('sign-out-btn').addEventListener('click', cleanSignOut);
+    $('retry-btn').addEventListener('click', () => {
+      if (currentUser) subscribeToUser(currentUser.uid);
+    });
+
+    // The listener reconnects on its own; resubscribe only if nothing ever loaded.
+    window.addEventListener('online', () => {
+      if (currentUser && !userData) subscribeToUser(currentUser.uid);
+    });
+
+    auth.onAuthStateChanged((user) => {
       if (user) {
         currentUser = user;
-        retryAttempts = 0;
-        await loadUserData(user.uid);
-        setupUserDocumentListener(user.uid);
-      } else {
+        subscribeToUser(user.uid);
+      } else if (!signingOut) {
         window.location.href = '/login';
       }
     });
-
-    // Setup real-time listener for user document
-    function setupUserDocumentListener(userId) {
-      if (userDocListener) {
-        userDocListener(); // Unsubscribe previous listener
-      }
-
-      userDocListener = firestore.collection('users').doc(userId).onSnapshot((doc) => {
-        if (doc.exists && userData) {
-          const updatedData = doc.data();
-          
-          // Check if subscription status changed
-          if (updatedData.subscriptionStatus !== userData.subscriptionStatus) {
-            userData = updatedData;
-            
-            const status = userData.subscriptionStatus || 'none';
-            const plan = userData.plan || 'none';
-            updateSubscriptionStatus(status, plan);
-            
-            // Update billing management link if needed
-            if (userData.fastspringCustomerId && status === 'active') {
-              const manageBillingBtn = document.getElementById('manage-billing-btn');
-              manageBillingBtn.href = 'https://empath.onfastspring.com/account';
-            }
-          } else if (userData) {
-            // Update other fields that might have changed
-            userData = updatedData;
-            document.getElementById('first-name-display').textContent = userData.firstName || 'Not set';
-            document.getElementById('last-name-display').textContent = userData.lastName || 'Not set';
-            
-            if (userData.firstName) {
-              document.getElementById('welcome-message').textContent = `Welcome back, ${userData.firstName}!`;
-            }
-          }
-        }
-      }, (error) => {
-        console.error('Real-time listener error:', error);
-      });
-    }
-
-    // Event listeners
-    document.getElementById('sign-out-btn').addEventListener('click', cleanSignOut);
-    document.getElementById('retry-btn').addEventListener('click', retryLoadUserData);
-    document.getElementById('retry-data-btn').addEventListener('click', retryLoadUserData);
-
-    // Cleanup listener when page unloads
-    window.addEventListener('beforeunload', () => {
-      if (userDocListener) {
-        userDocListener();
-      }
-    });
-
-    // Network status handlers
-    window.addEventListener('online', () => {
-      if (currentUser && retryAttempts > 0) {
-        retryAttempts = 0;
-        setTimeout(() => {
-          loadUserData(currentUser.uid, true);
-        }, 1000);
-      }
-    });
-
-    // Initialize dashboard
-    showLoading();
   </script>
 </body>
 </html>

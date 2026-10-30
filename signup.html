@@ -412,6 +412,30 @@
     }
 
     .tos a { color: var(--ink-700); }
+
+    input[readonly] {
+      background: var(--ink-50);
+      color: var(--ink-600);
+    }
+
+    .invite-done {
+      text-align: center;
+    }
+
+    .invite-done p {
+      margin: 0 0 20px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--ink-600);
+    }
+
+    .invite-done .submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #fff;
+    }
     .tos a:hover { color: var(--ink-900); }
 
     @media (prefers-reduced-motion: reduce) {
@@ -460,7 +484,7 @@
   <main>
     <div class="signup-layout">
       <section class="pitch" aria-labelledby="hero-heading">
-        <p class="eyebrow"><span class="gradient-text">Sign up</span></p>
+        <p class="eyebrow"><span class="gradient-text" id="hero-eyebrow">Sign up</span></p>
         <h2 id="hero-heading">Get started for free.</h2>
 
         <ul class="features">
@@ -484,7 +508,14 @@
       <div class="auth-card">
         <div class="auth-body">
           <div class="auth-heading">
-            <h1>Create your account</h1>
+            <h1 id="form-heading">Create your account</h1>
+            <p class="subtitle" id="form-subtitle" hidden></p>
+          </div>
+
+          <div class="invite-done" id="invite-done" hidden>
+            <p id="invite-done-text"></p>
+            <a class="submit" href="https://get-empath.com/download">Download Empath</a>
+            <p class="switch-link"><a href="/dashboard">Go to your account</a></p>
           </div>
 
           <form id="signup-form">
@@ -592,6 +623,22 @@
     document.getElementById('signin-link').href = signinUrl;
     document.getElementById('header-signin-link').href = signinUrl;
 
+    // /enterprise?invite=<token> claims a seat on a company's invoiced plan
+    // instead: sign up or sign in as the invited address, then acceptInvite.
+    // It never goes to checkout. Without ?invite the page is unchanged.
+    const FUNCTIONS_URL = 'https://us-central1-get-empath.cloudfunctions.net';
+    const inviteToken = isEnterprise ? urlParams.get('invite') : null;
+    const inviteNext = inviteToken ? `/enterprise?invite=${encodeURIComponent(inviteToken)}` : null;
+    let inviteEmail = null;
+    let signingUp = false;
+    let claiming = false;
+
+    if (inviteToken) {
+      const inviteSignin = `/login?next=${encodeURIComponent(inviteNext)}`;
+      document.getElementById('signin-link').href = inviteSignin;
+      document.getElementById('header-signin-link').href = inviteSignin;
+    }
+
     const signupForm = document.getElementById('signup-form');
     const formMessage = document.getElementById('form-message');
     const submitBtn = document.getElementById('submit-btn');
@@ -644,6 +691,7 @@
       }
 
       showProgress();
+      signingUp = true;
       console.log('Starting signup process for:', email, 'Plan:', currentPlan);
 
       try {
@@ -666,7 +714,7 @@
           lastName: lastName,
           displayName: `${firstName} ${lastName}`,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdVia: isEnterprise ? 'enterprise_signup' : 'web_signup',
+          createdVia: inviteToken ? 'enterprise_invite' : isEnterprise ? 'enterprise_signup' : 'web_signup',
           userAgent: navigator.userAgent.substring(0, 200),
           // Additional fields for better tracking
           signupSource: window.location.href,
@@ -701,6 +749,11 @@
         // Step 3: Handle plan-specific flow
         hideProgress();
 
+        if (inviteToken) {
+          await claimInvite(user);
+          return;
+        }
+
         // Redirect to custom checkout page instead of FastSpring popup.
         // The new account is already signed in, and checkout takes the uid
         // from that session - only the plan and a name for prefill go here.
@@ -722,6 +775,7 @@
 
       } catch (error) {
         hideProgress();
+        signingUp = false;
         console.error('Signup error:', error);
         
         // Enhanced error handling with more specific messages
@@ -729,7 +783,7 @@
         
         switch (error.code) {
           case 'auth/email-already-in-use':
-            errorMessage = `This email is already registered. <a href="${signinUrl}">Sign in instead</a>`;
+            errorMessage = `This email is already registered. <a href="${inviteToken ? `/login?next=${encodeURIComponent(inviteNext)}` : signinUrl}">Sign in instead</a>`;
             break;
           case 'auth/weak-password':
             errorMessage = 'Password should be at least 6 characters long.';
@@ -751,9 +805,146 @@
       }
     });
 
-    // Initialize the page
-    if (isEnterprise) {
-      document.getElementById('hero-heading').textContent = 'Start your 30-day free trial.';
+    // Call a callable Cloud Function over its HTTP protocol, so this page
+    // needs no extra SDK. Errors carry the server's message and reason.
+    async function callFunction(name, data, idToken) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (idToken) headers.Authorization = `Bearer ${idToken}`;
+      let response;
+      try {
+        response = await fetch(`${FUNCTIONS_URL}/${name}`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ data })
+        });
+      } catch (error) {
+        throw { reason: 'network', message: 'Network error. Please check your connection and try again.' };
+      }
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.error) {
+        throw {
+          reason: body.error?.details?.reason || 'unknown',
+          message: body.error?.message || 'Something went wrong. Please try again.'
+        };
+      }
+      return body.result;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    const INVITE_STATUS_MESSAGES = {
+      'not-found': 'This invite link isn’t valid. Ask your Empath admin for a new one.',
+      revoked: 'This invite was revoked. Ask your Empath admin for a new one.',
+      expired: 'This invite has expired. Ask your Empath admin for a new one.',
+      accepted: 'This invite has already been used. <a href="/login">Sign in</a> to your account.'
+    };
+
+    // Hide the fields but keep the message, which lives inside the form.
+    function collapseForm() {
+      Array.from(signupForm.children).forEach((el) => {
+        if (el !== formMessage) el.hidden = true;
+      });
+    }
+
+    function lockForm(message) {
+      signupForm.querySelectorAll('input, button').forEach((el) => { el.disabled = true; });
+      showMessage(message, 'error');
+    }
+
+    function showInviteDone(result) {
+      signupForm.hidden = true;
+      document.getElementById('form-subtitle').hidden = true;
+      document.getElementById('form-heading').textContent = 'You’re in.';
+      const plan = result.planLabel || `${result.orgName || 'your company'}’s Empath plan`;
+      document.getElementById('invite-done-text').textContent =
+        `Your account is on the ${plan}. Download Empath and sign in with this account to start.`;
+      document.getElementById('invite-done').hidden = false;
+    }
+
+    async function signOutForInvite(e) {
+      e.preventDefault();
+      await auth.signOut();
+      window.location.href = `/login?next=${encodeURIComponent(inviteNext)}`;
+    }
+
+    async function claimInvite(user) {
+      if (claiming) return;
+      claiming = true;
+
+      // Checked on the server too; this just gives the clearer message first.
+      if (inviteEmail && user.email.toLowerCase() !== inviteEmail) {
+        collapseForm();
+        showMessage(
+          `You’re signed in as ${escapeHtml(user.email)}, but this invite was sent to ${escapeHtml(inviteEmail)}. `
+          + '<a href="#" id="invite-switch">Sign in with that address</a>',
+          'error'
+        );
+        document.getElementById('invite-switch').addEventListener('click', signOutForInvite);
+        claiming = false;
+        return;
+      }
+
+      showMessage('Claiming your seat…', 'info');
+      try {
+        const result = await callFunction('acceptInvite', { token: inviteToken }, await user.getIdToken());
+        formMessage.innerHTML = '';
+        showInviteDone(result);
+      } catch (error) {
+        console.error('acceptInvite failed:', error);
+        collapseForm();
+        showMessage(escapeHtml(error.message), 'error');
+        if (error.reason === 'wrong-email') {
+          formMessage.innerHTML += ' <a href="#" id="invite-switch">Sign in with the invited address</a>';
+          document.getElementById('invite-switch').addEventListener('click', signOutForInvite);
+        }
+      } finally {
+        claiming = false;
+      }
+    }
+
+    async function initInvite() {
+      document.getElementById('hero-eyebrow').textContent = 'Enterprise';
+      document.getElementById('hero-heading').textContent = 'Your company has a seat for you.';
+      document.getElementById('form-heading').textContent = 'Claim your seat';
+      document.getElementById('submit-btn').textContent = 'Create Account';
+
+      let invite;
+      try {
+        invite = await callFunction('getInvite', { token: inviteToken });
+      } catch (error) {
+        lockForm(escapeHtml(error.message));
+        return;
+      }
+
+      if (invite.status !== 'pending') {
+        lockForm(INVITE_STATUS_MESSAGES[invite.status] || INVITE_STATUS_MESSAGES['not-found']);
+        return;
+      }
+
+      inviteEmail = invite.email;
+      const emailInput = document.getElementById('email');
+      emailInput.value = invite.email;
+      emailInput.readOnly = true;
+      const subtitle = document.getElementById('form-subtitle');
+      subtitle.textContent = `${invite.orgName || 'Your company'} invited ${invite.email}.`;
+      subtitle.hidden = false;
+
+      // Back from /login, or already signed in: claim straight away.
+      auth.onAuthStateChanged((user) => {
+        if (user && !signingUp) claimInvite(user);
+      });
+    }
+
+    // Initialize the page. /enterprise is invite-only now: the self-serve
+    // enterprise sign-up is kept below as a template but not reachable.
+    if (inviteToken) {
+      initInvite();
+    } else if (isEnterprise) {
+      window.location.replace('/signup');
     }
 
     console.log('Signup page loaded. Plan:', currentPlan, 'Enterprise:', isEnterprise, 'Config:', planConfigs[currentPlan]);

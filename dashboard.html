@@ -420,18 +420,22 @@
     let currentUser = null;
     let userData = null;
     let unsubscribeUserDoc = null;
+    // Enterprise members: billing lives on orgs/{orgId}, which members may read.
+    let orgData = null;
+    let orgListenId = null;
+    let unsubscribeOrgDoc = null;
     let loadTimer = null;
     let creatingDoc = false;
     let signingOut = false;
 
     const $ = (id) => document.getElementById(id);
 
-    // Enterprise accounts go back to the enterprise checkout (30-day trial
+    // The self-serve enterprise checkout is no longer routed, so every
+    // account renews through the public checkout.
+    // Enterprise accounts went back to the enterprise checkout (30-day trial
     // products); checkout itself reads the uid from the signed-in session.
     function getCheckoutPath() {
-      return userData && userData.createdVia === 'enterprise_signup'
-        ? '/enterprise/checkout'
-        : '/checkout';
+      return '/checkout';
     }
 
     function formatDate(timestamp) {
@@ -465,7 +469,78 @@
       return `${getCheckoutPath()}?${params.toString()}`;
     }
 
+    function stopOrgListener() {
+      if (unsubscribeOrgDoc) unsubscribeOrgDoc();
+      unsubscribeOrgDoc = null;
+      orgListenId = null;
+      orgData = null;
+    }
+
+    function syncOrgListener() {
+      const orgId = userData.orgId || null;
+      if (orgId === orgListenId) return;
+      stopOrgListener();
+      if (!orgId) return;
+
+      orgListenId = orgId;
+      unsubscribeOrgDoc = firestore.collection('orgs').doc(orgId).onSnapshot(
+        (doc) => {
+          orgData = doc.exists ? doc.data() : {};
+          render();
+        },
+        (error) => {
+          console.error('Could not load company plan:', error);
+          orgData = {};
+          render();
+        }
+      );
+    }
+
+    // An org member's plan is paid by their company: no billing or upgrade
+    // links, whatever the state.
+    function renderOrgSubscription() {
+      const org = orgData;
+      const planLabel = (org && org.planLabel) || 'Company plan';
+      const company = (org && org.name) || 'your company';
+      let label, details, tone = 'solid';
+
+      $('manage-billing-btn').hidden = true;
+      $('upgrade-btn').hidden = true;
+      $('activation-row').hidden = true;
+
+      const endsAt = org && org.deactivationDate ? formatDate(org.deactivationDate) : '';
+      const endsInFuture = org && org.deactivationDate
+        && (org.deactivationDate.toDate ? org.deactivationDate.toDate() : new Date(org.deactivationDate)) > new Date();
+
+      if (!org) {
+        label = 'Loading';
+        tone = 'muted';
+        details = 'Loading your company’s plan.';
+      } else if (org.subscriptionStatus === 'active') {
+        label = 'Active';
+        details = `Full access to all features, provided by ${company}.`;
+      } else if (org.subscriptionStatus === 'canceled' && endsInFuture) {
+        label = 'Ending';
+        tone = 'muted';
+        details = `Provided by ${company}. Access ends ${endsAt}.`;
+      } else {
+        label = 'Not active';
+        tone = 'muted';
+        details = `${company}’s plan isn’t active. Contact your Empath admin.`;
+      }
+
+      $('subscription-status').dataset.tone = tone;
+      $('status-text').textContent = label;
+      $('plan-name').textContent = planLabel;
+      $('plan-details').textContent = details;
+    }
+
     function renderSubscription() {
+      if (userData.orgId) {
+        renderOrgSubscription();
+        return;
+      }
+
       const status = userData.subscriptionStatus || 'none';
       const statusEl = $('subscription-status');
       const manageBtn = $('manage-billing-btn');
@@ -615,6 +690,7 @@
         (doc) => {
           if (doc.exists) {
             userData = doc.data();
+            syncOrgListener();
             render();
             if (!doc.metadata.fromCache) {
               clearTimeout(loadTimer);
@@ -698,6 +774,7 @@
         unsubscribeUserDoc();
         unsubscribeUserDoc = null;
       }
+      stopOrgListener();
 
       try {
         await auth.signOut();

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Empath Admin · Seats</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+  <style>
+    /* Tokens from the marketing site, as on dashboard.html. */
+    :root {
+      --ink-50: #f7f7f8;
+      --ink-100: #ededf0;
+      --ink-200: #d9d9df;
+      --ink-500: #6b6b7b;
+      --ink-600: #52525f;
+      --ink-700: #3f3f4a;
+      --ink-800: #26262e;
+      --ink-900: #15151a;
+      --ink-950: #0b0b0e;
+      --accent-50: #fef4f2;
+      --accent-200: #fbcbc3;
+      --accent-500: #dc4733;
+      --accent-700: #ab2519;
+      --accent-800: #8a1f16;
+      --sky-200: #cfe8f0;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--ink-50);
+      color: var(--ink-800);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    a { color: var(--accent-700); }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--accent-500); outline-offset: 2px; }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--ink-100);
+    }
+
+    .bar {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .wordmark { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.025em; color: var(--ink-900); }
+    .wordmark span { font-weight: 500; color: var(--ink-500); }
+    .who { font-size: 14px; color: var(--ink-600); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--ink-200);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; color: var(--ink-900); }
+    h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; color: var(--ink-900); }
+
+    .picker { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 14px; font-weight: 500; color: var(--ink-700); }
+
+    select, textarea {
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid var(--ink-200);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink-900);
+      font-size: 16px;
+    }
+
+    select { min-width: 260px; }
+    textarea { width: 100%; min-height: 96px; resize: vertical; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      padding: 16px;
+      background: var(--ink-50);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat span { font-size: 13px; color: var(--ink-600); }
+    .stat strong { font-size: 26px; letter-spacing: -0.02em; color: var(--ink-900); }
+
+    .meta { margin: 0; font-size: 14px; color: var(--ink-600); }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--ink-100);
+      color: var(--ink-800);
+    }
+
+    .pill[data-tone="good"] { background: var(--sky-200); color: var(--ink-900); }
+    .pill[data-tone="bad"] { background: var(--accent-50); color: var(--accent-800); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-weight: 600; color: var(--ink-600); padding: 8px 12px; border-bottom: 1px solid var(--ink-200); white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--ink-100); vertical-align: middle; }
+    td.actions { text-align: right; white-space: nowrap; }
+    .empty { color: var(--ink-500); font-size: 14px; margin: 0; }
+
+    .btn {
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--ink-200);
+      background: #fff;
+      color: var(--ink-900);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn + .btn { margin-left: 6px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.primary { background: var(--ink-950); border-color: var(--ink-950); color: #fff; min-height: 44px; padding: 0 20px; }
+    .btn.danger { color: var(--accent-800); border-color: var(--accent-200); }
+
+    .message { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.45; }
+    .message:empty { display: none; }
+    .message.error { background: var(--accent-50); border: 1px solid var(--accent-200); color: var(--accent-800); }
+    .message.info { background: var(--ink-100); color: var(--ink-800); }
+
+    .facts {
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .facts div { padding: 14px 16px; background: var(--ink-50); border-radius: 12px; min-width: 0; }
+    .facts dt { font-size: 13px; color: var(--ink-600); margin-bottom: 4px; }
+    .facts dd { margin: 0; font-size: 15px; color: var(--ink-900); overflow-wrap: anywhere; }
+
+    .results { margin: 0; padding-left: 18px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+    .results .bad { color: var(--accent-800); }
+
+    @media (max-width: 720px) {
+      main { padding: 20px 16px 48px; }
+      .bar { padding: 0 16px; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .facts { grid-template-columns: minmax(0, 1fr); }
+      select { min-width: 0; width: 100%; }
+      .picker .field { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <p class="wordmark">Empath <span>Admin · Seats</span></p>
+      <div class="who"><span id="who"></span><button class="btn" id="sign-out" type="button" hidden>Sign out</button></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="message" id="page-message" role="alert"></div>
+
+    <section class="card" id="picker-card" hidden aria-labelledby="picker-heading">
+      <h1 id="picker-heading">Enterprise seats</h1>
+      <div class="picker">
+        <div class="field">
+          <label for="org-select">Company</label>
+          <select id="org-select"></select>
+        </div>
+        <button class="btn" id="refresh" type="button">Refresh</button>
+      </div>
+    </section>
+
+    <div id="org-view" hidden>
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <section class="card" aria-labelledby="org-name">
+          <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline">
+            <h2 id="org-name"></h2>
+            <span class="pill" id="org-status"></span>
+          </div>
+          <p class="meta" id="org-meta"></p>
+          <div class="stats">
+            <div class="stat"><span>Seats</span><strong id="stat-seats"></strong></div>
+            <div class="stat"><span>Members</span><strong id="stat-used"></strong></div>
+            <div class="stat"><span>Pending invites</span><strong id="stat-pending"></strong></div>
+            <div class="stat"><span>Free</span><strong id="stat-free"></strong></div>
+          </div>
+          <p class="meta">The seat total comes from the FastSpring quantity. To change it, change the subscription in FastSpring.</p>
+        </section>
+
+        <section class="card" aria-labelledby="fs-heading">
+          <h2 id="fs-heading">FastSpring</h2>
+          <dl class="facts" id="fs-facts"></dl>
+          <p class="meta" id="fs-note"></p>
+        </section>
+
+        <section class="card" aria-labelledby="invite-heading">
+          <h2 id="invite-heading">Invite people</h2>
+          <form id="invite-form" novalidate>
+            <div class="field">
+              <label for="invite-emails">Email addresses, one per line or separated by commas</label>
+              <textarea id="invite-emails" autocomplete="off"></textarea>
+            </div>
+            <div style="margin-top: 12px"><button class="btn primary" type="submit" id="invite-btn">Send invites</button></div>
+          </form>
+          <ul class="results" id="invite-results" hidden></ul>
+        </section>
+
+        <section class="card" aria-labelledby="members-heading">
+          <h2 id="members-heading">Members</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Email</th><th scope="col">Name</th><th scope="col"><span class="visually-hidden" style="position:absolute;left:-9999px">Actions</span></th></tr></thead>
+              <tbody id="members-body"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="members-empty" hidden>No members yet.</p>
+        </section>
+
+        <section class="card" aria-labelledby="invites-heading">
+          <h2 id="invites-heading">Invites</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th scope="col">Email</th><th scope="col">Status</th><th scope="col">Expires</th><th scope="col"><span style="position:absolute;left:-9999px">Actions</span></th></tr></thead>
+              <tbody id="invites-body"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="invites-empty" hidden>No invites yet.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'auth.get-empath.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Internal seat management for Empath staff. Every read and write goes
+    // through the orgAdmin function, which checks the empathAdmin claim; this
+    // page holds no privileges of its own. Creating orgs and changing their
+    // settings stay in scripts/enterprise-admin.js.
+    const FUNCTIONS_URL = 'https://us-central1-get-empath.cloudfunctions.net';
+    const $ = (id) => document.getElementById(id);
+    let currentOrgId = null;
+
+    function showMessage(text, type = 'error') {
+      $('page-message').textContent = text;
+      $('page-message').className = `message ${type}`;
+    }
+
+    function clearMessage() {
+      $('page-message').textContent = '';
+      $('page-message').className = 'message';
+    }
+
+    async function orgAdmin(action, args = {}) {
+      const user = auth.currentUser;
+      let response;
+      try {
+        response = await fetch(`${FUNCTIONS_URL}/orgAdmin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await user.getIdToken()}` },
+          body: JSON.stringify({ data: { action, ...args } })
+        });
+      } catch (error) {
+        throw { status: 'network', message: 'Network error. Check your connection and try again.' };
+      }
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.error) {
+        throw { status: body.error?.status, message: body.error?.message || 'Something went wrong.' };
+      }
+      return body.result;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function cell(text) {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    }
+
+    function actionButton(label, onClick, danger = false) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = danger ? 'btn danger' : 'btn';
+      btn.textContent = label;
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try { await onClick(); } finally { btn.disabled = false; }
+      });
+      return btn;
+    }
+
+    // Run a change, report it, then reload the org so the numbers are fresh
+    async function act(work, done) {
+      clearMessage();
+      try {
+        const result = await work();
+        await loadOrg(currentOrgId);
+        showMessage(done(result), 'info');
+      } catch (error) {
+        showMessage(error.message);
+      }
+    }
+
+    function money(amount, currency) {
+      if (typeof amount !== 'number') return null;
+      try {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+      } catch (error) {
+        return `${amount} ${currency || ''}`.trim();
+      }
+    }
+
+    // Links from webhooks are shown only if they're https on FastSpring
+    function fastspringLink(url, label) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:' || !/(^|\.)onfastspring\.com$/.test(parsed.hostname)) return null;
+        const a = document.createElement('a');
+        a.href = parsed.href;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = label;
+        return a;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function renderFastSpring(fs) {
+      const sub = fs.subscription;
+      const charge = fs.lastCharge;
+      const quote = fs.quote;
+      const facts = [
+        ['Subscription', sub ? `${sub.state}${sub.quantity != null ? ` · ${sub.quantity} seats` : ''}` : (fs.subscriptionId ? 'Not reported yet' : 'No subscription yet')],
+        ['Price', sub ? [sub.priceDisplay || money(sub.price, sub.currency), sub.autoRenew === false ? 'auto-renew off' : null].filter(Boolean).join(' · ') || '—' : '—'],
+        ['Next charge', sub && sub.nextChargeDate ? formatDate(sub.nextChargeDate) : '—'],
+        ['Last charge', charge ? [charge.status, money(charge.total, charge.currency), formatDate(charge.at), charge.reason].filter(Boolean).join(' · ') : 'None yet'],
+        ['Quote', quote ? [quote.status, quote.orderStatus && quote.orderStatus !== quote.status ? `order ${quote.orderStatus}` : null].filter(Boolean).join(' · ') || '—' : (fs.quoteReference || 'None')],
+        ['Links', null]
+      ];
+
+      $('fs-facts').replaceChildren(...facts.map(([label, value]) => {
+        const div = document.createElement('div');
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = label;
+        if (label === 'Links') {
+          const links = [quote && fastspringLink(quote.quoteUrl, 'Quote'), quote && fastspringLink(quote.invoiceUrl, 'Invoice')].filter(Boolean);
+          if (links.length) links.forEach((a, i) => { if (i) dd.append(' · '); dd.append(a); });
+          else dd.textContent = '—';
+        } else {
+          dd.textContent = value;
+        }
+        div.append(dt, dd);
+        return div;
+      }));
+
+      $('fs-note').textContent = fs.lastWebhookTime
+        ? `From FastSpring's webhooks; last update ${fs.lastWebhookEvent || ''} on ${formatDate(fs.lastWebhookTime)}. Change seats and quotes in the FastSpring app.`
+        : 'From FastSpring\'s webhooks; nothing received yet. Change seats and quotes in the FastSpring app.';
+    }
+
+    function renderOrg(org) {
+      $('org-name').textContent = org.planLabel ? `${org.name} · ${org.planLabel}` : org.name;
+      const status = $('org-status');
+      status.textContent = org.hasAccess ? `${org.subscriptionStatus} · has access` : `${org.subscriptionStatus} · no access`;
+      status.dataset.tone = org.hasAccess ? 'good' : 'bad';
+
+      const meta = [];
+      if (org.nextChargeDate) meta.push(`Next charge ${formatDate(org.nextChargeDate)}`);
+      if (org.deactivationDate) meta.push(`Ends ${formatDate(org.deactivationDate)}`);
+      meta.push(org.allowedDomains.length
+        ? `Self-serve: verified @${org.allowedDomains.join(', @')} addresses join at ${org.joinPath || '(no page set)'}`
+        : 'Self-serve joining off: invites only');
+      $('org-meta').textContent = meta.join(' · ');
+
+      $('stat-seats').textContent = org.seats;
+      $('stat-used').textContent = org.seatsUsed;
+      $('stat-pending').textContent = org.pending;
+      $('stat-free').textContent = org.seatsFree;
+      renderFastSpring(org.fastspring);
+
+      const members = $('members-body');
+      members.replaceChildren(...org.members.map((m) => {
+        const tr = document.createElement('tr');
+        const actions = cell('');
+        actions.className = 'actions';
+        actions.append(actionButton('Remove', () => {
+          if (!window.confirm(`Remove ${m.email || m.uid} from ${org.name}? They lose access within minutes, and the seat becomes free.`)) return;
+          return act(() => orgAdmin('removeMember', { orgId: org.orgId, uid: m.uid }), () => `Removed ${m.email || m.uid}. Their seat is free.`);
+        }, true));
+        tr.append(cell(m.email || m.uid), cell(m.name || '—'), actions);
+        return tr;
+      }));
+      $('members-empty').hidden = org.members.length > 0;
+
+      const invites = $('invites-body');
+      invites.replaceChildren(...org.invites.map((i) => {
+        const tr = document.createElement('tr');
+        const actions = cell('');
+        actions.className = 'actions';
+        if (i.status === 'pending' || i.status === 'expired') {
+          actions.append(actionButton('Resend', () =>
+            act(() => orgAdmin('resend', { inviteId: i.inviteId }), (r) => `Sent a new link to ${r.email}. The old one no longer works.`)));
+        }
+        if (i.status === 'pending') {
+          actions.append(actionButton('Revoke', () => {
+            if (!window.confirm(`Revoke the invite to ${i.email}? Their link stops working.`)) return;
+            return act(() => orgAdmin('revoke', { inviteId: i.inviteId }), () => `Revoked the invite to ${i.email}.`);
+          }, true));
+        }
+        const status = cell(i.status);
+        tr.append(cell(i.email), status, cell(i.status === 'pending' || i.status === 'expired' ? formatDate(i.expiresAt) : '—'), actions);
+        return tr;
+      }));
+      $('invites-empty').hidden = org.invites.length > 0;
+
+      $('org-view').hidden = false;
+    }
+
+    async function loadOrg(orgId) {
+      currentOrgId = orgId;
+      const url = new URL(window.location.href);
+      url.searchParams.set('org', orgId);
+      history.replaceState(null, '', url);
+      renderOrg(await orgAdmin('getOrg', { orgId }));
+    }
+
+    async function loadOrgs() {
+      const orgs = await orgAdmin('listOrgs');
+      const select = $('org-select');
+      select.replaceChildren(...orgs.map((o) => {
+        const option = document.createElement('option');
+        option.value = o.orgId;
+        option.textContent = `${o.name} (${o.seatsUsed}/${o.seats} seats)`;
+        return option;
+      }));
+      $('picker-card').hidden = false;
+
+      if (!orgs.length) {
+        showMessage('No companies yet. Create one with the admin script (create-org).', 'info');
+        return;
+      }
+      const wanted = new URLSearchParams(window.location.search).get('org');
+      select.value = orgs.some((o) => o.orgId === wanted) ? wanted : orgs[0].orgId;
+      await loadOrg(select.value);
+    }
+
+    $('org-select').addEventListener('change', (e) => {
+      clearMessage();
+      $('invite-results').hidden = true;
+      loadOrg(e.target.value).catch((error) => showMessage(error.message));
+    });
+
+    $('refresh').addEventListener('click', () => {
+      clearMessage();
+      loadOrg(currentOrgId).catch((error) => showMessage(error.message));
+    });
+
+    $('invite-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const emails = [...new Set($('invite-emails').value.split(/[\s,;]+/).map((s) => s.trim().toLowerCase()).filter(Boolean))];
+      if (!emails.length) {
+        showMessage('Enter at least one email address.');
+        return;
+      }
+
+      const btn = $('invite-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      clearMessage();
+      try {
+        const { results } = await orgAdmin('invite', { orgId: currentOrgId, emails });
+        const list = $('invite-results');
+        list.replaceChildren(...results.map((r) => {
+          const li = document.createElement('li');
+          li.textContent = r.ok ? `${r.email}: invited` : `${r.email}: ${r.error}`;
+          if (!r.ok) li.className = 'bad';
+          return li;
+        }));
+        list.hidden = false;
+        // Keep only the addresses that failed, so they can be fixed and retried
+        $('invite-emails').value = results.filter((r) => !r.ok).map((r) => r.email).join('\n');
+        await loadOrg(currentOrgId);
+      } catch (error) {
+        showMessage(error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send invites';
+      }
+    });
+
+    $('sign-out').addEventListener('click', async () => {
+      await auth.signOut();
+      window.location.href = '/login';
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = `/login?next=${encodeURIComponent('/admin')}`;
+        return;
+      }
+      $('who').textContent = user.email;
+      $('sign-out').hidden = false;
+      try {
+        // A fresh token, so a just-granted admin claim is included
+        await user.getIdToken(true);
+        await loadOrgs();
+      } catch (error) {
+        showMessage(error.status === 'PERMISSION_DENIED'
+          ? 'This page is for Empath staff. Ask an Empath admin to grant your account access, then sign in again.'
+          : error.message);
+      }
+    });
+  </script>
+</body>
+</html>

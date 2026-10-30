@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Empath for GoFundMe</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    /*
+     * Tokens from the marketing site (EmpathWebsite/src/app/globals.css), as
+     * on signup.html.
+     */
+    :root {
+      --ink-50: #f7f7f8;
+      --ink-100: #ededf0;
+      --ink-200: #d9d9df;
+      --ink-300: #b9b9c4;
+      --ink-400: #8c8c9c;
+      --ink-500: #6b6b7b;
+      --ink-600: #52525f;
+      --ink-700: #3f3f4a;
+      --ink-800: #26262e;
+      --ink-900: #15151a;
+      --ink-950: #0b0b0e;
+      --accent-50: #fef4f2;
+      --accent-200: #fbcbc3;
+      --accent-500: #dc4733;
+      --accent-700: #ab2519;
+      --accent-800: #8a1f16;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      color: var(--ink-800);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+    a { color: var(--accent-700); }
+    a:hover { color: var(--accent-800); }
+    [hidden] { display: none !important; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-500);
+      outline-offset: 2px;
+    }
+
+    .site-header { border-bottom: 1px solid var(--ink-100); }
+
+    .site-header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .wordmark {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--ink-900);
+    }
+
+    .wordmark span { font-weight: 500; color: var(--ink-500); }
+
+    .header-link { font-size: 14px; font-weight: 600; text-decoration: none; }
+
+    main {
+      flex-grow: 1;
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 56px 24px 64px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 56px;
+      align-items: flex-start;
+    }
+
+    .pitch {
+      flex: 999 1 480px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-700);
+    }
+
+    .pitch h1 {
+      margin: 0;
+      font-size: 52px;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .pitch .lede {
+      margin: 0;
+      max-width: 520px;
+      font-size: 18px;
+      line-height: 1.55;
+      color: var(--ink-600);
+    }
+
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .steps li {
+      padding: 18px;
+      border: 1px solid var(--ink-100);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--ink-700);
+    }
+
+    .steps strong {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
+    }
+
+    .panel {
+      flex: 1 1 360px;
+      min-width: 0;
+      max-width: 420px;
+      background: var(--ink-50);
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
+    }
+
+    .panel p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-600); }
+
+    form { display: flex; flex-direction: column; gap: 14px; }
+
+    .name-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    label { font-size: 14px; font-weight: 500; color: var(--ink-700); }
+
+    input {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      border: 1px solid var(--ink-200);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink-900);
+      font-size: 16px;
+    }
+
+    input:focus { outline: none; border-color: var(--ink-900); box-shadow: 0 0 0 3px rgba(11, 11, 14, 0.08); }
+
+    .hint { font-size: 13px; color: var(--ink-600); }
+
+    .submit {
+      min-height: 46px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 9999px;
+      background: var(--ink-950);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .submit:hover { background: var(--ink-800); }
+    .submit:disabled { background: var(--ink-700); cursor: not-allowed; }
+
+    .secondary {
+      min-height: 44px;
+      padding: 0 20px;
+      border: 1px solid var(--ink-200);
+      border-radius: 9999px;
+      background: #fff;
+      color: var(--ink-900);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .message:empty { display: none; }
+    .message.error { background: var(--accent-50); border: 1px solid var(--accent-200); color: var(--accent-800); }
+    .message.info { background: var(--ink-100); color: var(--ink-800); }
+
+    .small { font-size: 13px; color: var(--ink-600); }
+    .small a { font-weight: 600; }
+
+    @media (max-width: 640px) {
+      main { padding: 24px 16px 40px; gap: 32px; }
+      .panel { order: -1; max-width: none; padding: 20px; }
+      .pitch h1 { font-size: 34px; }
+      .steps { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (max-width: 380px) {
+      .name-row { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="wordmark">Empath <span>× GoFundMe</span></p>
+      <a class="header-link" href="/login?next=%2Fgofundme">Sign in</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="pitch" aria-labelledby="hero-heading">
+      <p class="eyebrow">For the GoFundMe team</p>
+      <h1 id="hero-heading">Your Empath seat is ready.</h1>
+      <p class="lede">GoFundMe has Empath for its team. Launch any iOS or Android device in seconds, capture flows without effort, and see how competitors' apps work.</p>
+      <ol class="steps">
+        <li><strong>1</strong>Create your account with your @gofundme.com email</li>
+        <li><strong>2</strong>Confirm it from your inbox</li>
+        <li><strong>3</strong>Download Empath and sign in</li>
+      </ol>
+    </section>
+
+    <section class="panel" aria-live="polite">
+      <!-- Create an account -->
+      <div id="signup-panel">
+        <form id="signup-form" novalidate>
+          <h2>Create your account</h2>
+          <div class="name-row">
+            <div class="field">
+              <label for="first-name">First name</label>
+              <input type="text" id="first-name" required autocomplete="given-name">
+            </div>
+            <div class="field">
+              <label for="last-name">Last name</label>
+              <input type="text" id="last-name" required autocomplete="family-name">
+            </div>
+          </div>
+          <div class="field">
+            <label for="email">Work email</label>
+            <input type="email" id="email" required placeholder="you@gofundme.com" autocomplete="email" aria-describedby="email-hint">
+            <span class="hint" id="email-hint">Must be your @gofundme.com address.</span>
+          </div>
+          <div class="field">
+            <label for="password">Password <span class="hint">(6+ characters)</span></label>
+            <input type="password" id="password" required minlength="6" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label for="confirm-password">Confirm password</label>
+            <input type="password" id="confirm-password" required minlength="6" autocomplete="new-password">
+          </div>
+          <button type="submit" id="submit-btn" class="submit">Create account</button>
+          <p class="small">By creating an account, you agree to our <a href="https://get-empath.com/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>.</p>
+          <p class="small">Already have an account? <a href="/login?next=%2Fgofundme">Sign in</a></p>
+        </form>
+      </div>
+
+      <!-- Waiting for the email to be confirmed -->
+      <div id="verify-panel" hidden>
+        <h2>Check your inbox</h2>
+        <p>We sent a link to <strong id="verify-email"></strong>. Click it to confirm your address, and we'll set up your seat.</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px">
+          <button type="button" class="submit" id="verified-btn">I've confirmed it</button>
+          <button type="button" class="secondary" id="resend-btn">Resend the link</button>
+        </div>
+      </div>
+
+      <!-- Claiming the seat -->
+      <div id="working-panel" hidden>
+        <h2>Setting up your seat…</h2>
+        <p>One moment.</p>
+      </div>
+
+      <div class="message" id="form-message" role="alert"></div>
+    </section>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCwpPROFnBDsX4gqdIbVsUgCZGkcvtWEKY',
+      authDomain: 'auth.get-empath.com',
+      projectId: 'get-empath',
+      storageBucket: 'get-empath.firebasestorage.app',
+      messagingSenderId: '380829207707',
+      appId: '1:380829207707:web:e3b97e0bb83734ba2f4a3e',
+      measurementId: 'G-W10VEF7WQL'
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const firestore = firebase.firestore();
+
+    // GoFundMe's own sign-up page. The company pays for its seats through a
+    // FastSpring quote, so there is no checkout here: a verified
+    // @gofundme.com account takes a seat (joinOrg) and goes to download.
+    // The domain check on this page is only a convenience; joinOrg enforces
+    // it, and only for a verified address.
+    const ORG_ID = 'gofundme';
+    const DOMAIN = 'gofundme.com';
+    const FUNCTIONS_URL = 'https://us-central1-get-empath.cloudfunctions.net';
+    const DOWNLOAD_URL = 'https://get-empath.com/download';
+    const VERIFY_POLL_MS = 5000;
+
+    const $ = (id) => document.getElementById(id);
+    const formMessage = $('form-message');
+    let signingUp = false;
+    let claiming = false;
+    let pollTimer = null;
+
+    function showMessage(html, type = 'error') {
+      formMessage.innerHTML = html;
+      formMessage.className = `message ${type}`;
+    }
+
+    function clearMessage() {
+      formMessage.innerHTML = '';
+      formMessage.className = 'message';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showPanel(name) {
+      ['signup', 'verify', 'working'].forEach((p) => { $(`${p}-panel`).hidden = p !== name; });
+      if (name !== 'verify') clearInterval(pollTimer);
+    }
+
+    function isWorkEmail(email) {
+      return String(email || '').trim().toLowerCase().endsWith(`@${DOMAIN}`);
+    }
+
+    // Call a callable Cloud Function over its HTTP protocol, as signup.html does.
+    async function callFunction(name, data, idToken) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (idToken) headers.Authorization = `Bearer ${idToken}`;
+      let response;
+      try {
+        response = await fetch(`${FUNCTIONS_URL}/${name}`, { method: 'POST', headers, body: JSON.stringify({ data }) });
+      } catch (error) {
+        throw { reason: 'network', message: 'Network error. Please check your connection and try again.' };
+      }
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.error) {
+        throw {
+          reason: body.error?.details?.reason || 'unknown',
+          message: body.error?.message || 'Something went wrong. Please try again.'
+        };
+      }
+      return body.result;
+    }
+
+    async function signOutAndRestart(e) {
+      e.preventDefault();
+      await auth.signOut();
+      clearMessage();
+      $('signup-form').hidden = false;
+      showPanel('signup');
+    }
+
+    function offerSignOut(text) {
+      showMessage(`${text} <a href="#" id="switch-account">Use a different account</a>`);
+      $('switch-account').addEventListener('click', signOutAndRestart);
+    }
+
+    // Everything after sign-in goes through here: from the form, from
+    // /login, and from the verification link landing back on this page.
+    async function proceed(user) {
+      if (claiming) return;
+
+      if (!isWorkEmail(user.email)) {
+        showPanel('signup');
+        $('signup-form').hidden = true;
+        offerSignOut(`You're signed in as ${escapeHtml(user.email)}. This page is for @${DOMAIN} addresses.`);
+        return;
+      }
+
+      // The verified flag on a session goes stale; ask Firebase again.
+      await user.reload();
+      const current = auth.currentUser || user;
+      if (!current.emailVerified) {
+        $('verify-email').textContent = current.email;
+        showPanel('verify');
+        clearInterval(pollTimer);
+        pollTimer = setInterval(async () => {
+          await current.reload();
+          if (current.emailVerified) proceed(current);
+        }, VERIFY_POLL_MS);
+        return;
+      }
+
+      claiming = true;
+      clearMessage();
+      showPanel('working');
+      try {
+        // Force a fresh token so it carries email_verified: true
+        await callFunction('joinOrg', { orgId: ORG_ID }, await current.getIdToken(true));
+        window.location.href = DOWNLOAD_URL;
+      } catch (error) {
+        console.error('joinOrg failed:', error);
+        $('working-panel').hidden = true;
+        if (error.reason === 'other-org' || error.reason === 'wrong-domain') {
+          offerSignOut(escapeHtml(error.message));
+        } else {
+          showMessage(escapeHtml(error.message));
+        }
+      } finally {
+        claiming = false;
+      }
+    }
+
+    $('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessage();
+
+      const firstName = $('first-name').value.trim();
+      const lastName = $('last-name').value.trim();
+      const email = $('email').value.trim();
+      const password = $('password').value;
+
+      if (!firstName || !lastName || !email || !password) {
+        showMessage('Please fill in all fields.');
+        return;
+      }
+      if (!isWorkEmail(email)) {
+        showMessage(`Use your @${DOMAIN} work email.`);
+        $('email').focus();
+        return;
+      }
+      if (password.length < 6) {
+        showMessage('Password must be at least 6 characters long.');
+        return;
+      }
+      if (password !== $('confirm-password').value) {
+        showMessage('Passwords do not match.');
+        return;
+      }
+
+      const submitBtn = $('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating…';
+      signingUp = true;
+
+      try {
+        const { user } = await auth.createUserWithEmailAndPassword(email, password);
+
+        // joinOrgId makes the welcome email's verification link land back
+        // here (the server picks the path from the org). No billing fields:
+        // rules reject them, and the seat comes from joinOrg.
+        const userData = {
+          email: user.email,
+          firstName,
+          lastName,
+          displayName: `${firstName} ${lastName}`,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdVia: 'org_join',
+          joinOrgId: ORG_ID,
+          userAgent: navigator.userAgent.substring(0, 200),
+          signupSource: window.location.href
+        };
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await firestore.collection('users').doc(user.uid).set(userData, { merge: true });
+            break;
+          } catch (error) {
+            console.warn(`Firestore write attempt ${attempt} failed:`, error.message);
+          }
+        }
+
+        signingUp = false;
+        await proceed(user);
+      } catch (error) {
+        signingUp = false;
+        console.error('Signup error:', error);
+        const messages = {
+          'auth/email-already-in-use': 'This email already has an account. <a href="/login?next=%2Fgofundme">Sign in instead</a>',
+          'auth/weak-password': 'Password should be at least 6 characters long.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/network-request-failed': 'Network error. Please check your connection and try again.'
+        };
+        showMessage(messages[error.code] || `Account creation failed: ${escapeHtml(error.message || '')}`);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create account';
+      }
+    });
+
+    $('verified-btn').addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      await user.reload();
+      if (auth.currentUser.emailVerified) {
+        proceed(auth.currentUser);
+      } else {
+        showMessage('We haven’t seen your confirmation yet. Click the link in the email, then try again.', 'info');
+      }
+    });
+
+    $('resend-btn').addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        await callFunction('resendJoinVerification', {}, await user.getIdToken());
+        showMessage(`Sent. Check ${escapeHtml(user.email)}, including spam.`, 'info');
+      } catch (error) {
+        showMessage(escapeHtml(error.message));
+      }
+    });
+
+    auth.onAuthStateChanged((user) => {
+      if (user && !signingUp) proceed(user);
+    });
+  </script>
+</body>
+</html>

@@ -21,16 +21,20 @@
       "destination": "/signup.html"
     },
     {
-      "source": "/enterprise/checkout",
-      "destination": "/checkout.html"
-    },
-    {
       "source": "/login",
       "destination": "/login.html"
     },
     {
       "source": "/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/gofundme",
+      "destination": "/gofundme.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
     }
   ]
 }

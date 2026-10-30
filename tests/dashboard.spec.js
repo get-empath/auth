@@ -122,10 +122,10 @@ test.describe('subscription states', () => {
     });
   }
 
-  test('enterprise accounts go to the enterprise checkout', async ({ page }) => {
+  test('former self-serve enterprise accounts renew through the public checkout', async ({ page }) => {
     await signedInWith(page, { ...BASE, createdVia: 'enterprise_signup' });
     const href = await page.getByRole('link', { name: 'Choose a plan' }).getAttribute('href');
-    expect(href).toMatch(/^\/enterprise\/checkout\?/);
+    expect(href).toMatch(/^\/checkout\?/);
   });
 
   test('without a first name, checkout uses the email name', async ({ page }) => {

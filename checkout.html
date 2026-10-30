@@ -520,7 +520,10 @@
     let isInitialized = false;
     let userInfo = {};
 
-    // /enterprise/checkout serves this same page with the enterprise products.
+    // Template: /enterprise/checkout is no longer routed (vercel.json), so
+    // this branch never runs. It is kept as the starting point for
+    // client-specific checkouts that sell the enterprise products.
+    // /enterprise/checkout served this same page with the enterprise products.
     // Trial terms and the amount due today are shown by the FastSpring embed
     // itself, so this page never states them and cannot drift from the
     // product configuration.

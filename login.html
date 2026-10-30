@@ -423,10 +423,11 @@
 
     /**
      * Where to go after sign-in. A checkout page sends signed-out visitors here
-     * with ?next=<its path>; anything other than our own checkout paths falls
+     * with ?next=<its path>, and the enterprise invite page with
+     * ?next=/enterprise?invite=<token>; anything other than those paths falls
      * back to the dashboard, so the parameter can't be used to redirect off-site.
      */
-    const ALLOWED_NEXT_PATHS = ['/checkout', '/enterprise/checkout'];
+    const ALLOWED_NEXT_PATHS = ['/checkout', '/enterprise', '/gofundme', '/admin'];
 
     function getRedirectTarget() {
       const next = new URLSearchParams(window.location.search).get('next');
@@ -446,8 +447,12 @@
     const redirectTarget = getRedirectTarget();
     const isEnterpriseFlow = redirectTarget.startsWith('/enterprise');
 
-    // Keep enterprise visitors in the enterprise flow if they need an account
-    const signupUrl = isEnterpriseFlow ? '/enterprise' : 'https://get-empath.com/signup';
+    // Keep enterprise visitors in the enterprise flow if they need an account,
+    // and an invitee on their invite
+    const isInviteFlow = redirectTarget.startsWith('/enterprise?');
+    const signupUrl = isInviteFlow ? redirectTarget
+      : redirectTarget === '/gofundme' ? '/gofundme'
+      : isEnterpriseFlow ? '/enterprise' : 'https://get-empath.com/signup';
     document.getElementById('signup-link').href = signupUrl;
     document.getElementById('header-signup-link').href = signupUrl;
 

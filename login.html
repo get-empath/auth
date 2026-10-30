@@ -427,7 +427,9 @@
      * ?next=/enterprise?invite=<token>; anything other than those paths falls
      * back to the dashboard, so the parameter can't be used to redirect off-site.
      */
-    const ALLOWED_NEXT_PATHS = ['/checkout', '/enterprise', '/gofundme', '/admin'];
+    // Company sign-up pages (org.html), which send account creation back to themselves
+    const COMPANY_PAGES = ['/gofundme', '/tennischannel'];
+    const ALLOWED_NEXT_PATHS = ['/checkout', '/enterprise', '/admin', ...COMPANY_PAGES];
 
     function getRedirectTarget() {
       const next = new URLSearchParams(window.location.search).get('next');
@@ -451,7 +453,7 @@
     // and an invitee on their invite
     const isInviteFlow = redirectTarget.startsWith('/enterprise?');
     const signupUrl = isInviteFlow ? redirectTarget
-      : redirectTarget === '/gofundme' ? '/gofundme'
+      : COMPANY_PAGES.includes(redirectTarget) ? redirectTarget
       : isEnterpriseFlow ? '/enterprise' : 'https://get-empath.com/signup';
     document.getElementById('signup-link').href = signupUrl;
     document.getElementById('header-signup-link').href = signupUrl;

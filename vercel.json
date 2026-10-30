@@ -30,7 +30,11 @@
     },
     {
       "source": "/gofundme",
-      "destination": "/gofundme.html"
+      "destination": "/org.html"
+    },
+    {
+      "source": "/tennischannel",
+      "destination": "/org.html"
     },
     {
       "source": "/admin",

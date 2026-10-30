@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Empath for GoFundMe</title>
+  <title>Empath</title>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -260,18 +260,18 @@
 <body>
   <header class="site-header">
     <div class="site-header-inner">
-      <p class="wordmark">Empath <span>× GoFundMe</span></p>
-      <a class="header-link" href="/login?next=%2Fgofundme">Sign in</a>
+      <p class="wordmark">Empath <span>× <span data-org="name"></span></span></p>
+      <a class="header-link" data-org="login" href="/login">Sign in</a>
     </div>
   </header>
 
   <main>
     <section class="pitch" aria-labelledby="hero-heading">
-      <p class="eyebrow">For the GoFundMe team</p>
+      <p class="eyebrow">For the <span data-org="name"></span> team</p>
       <h1 id="hero-heading">Your Empath seat is ready.</h1>
-      <p class="lede">GoFundMe has Empath for its team. Launch any iOS or Android device in seconds, capture flows without effort, and see how competitors' apps work.</p>
+      <p class="lede"><span data-org="name"></span> has Empath for its team. Launch any iOS or Android device in seconds, capture flows without effort, and see how competitors' apps work.</p>
       <ol class="steps">
-        <li><strong>1</strong>Create your account with your @gofundme.com email</li>
+        <li><strong>1</strong>Create your account with your <span data-org="at-domain"></span> email</li>
         <li><strong>2</strong>Confirm it from your inbox</li>
         <li><strong>3</strong>Download Empath and sign in</li>
       </ol>
@@ -294,8 +294,8 @@
           </div>
           <div class="field">
             <label for="email">Work email</label>
-            <input type="email" id="email" required placeholder="you@gofundme.com" autocomplete="email" aria-describedby="email-hint">
-            <span class="hint" id="email-hint">Must be your @gofundme.com address.</span>
+            <input type="email" id="email" required placeholder="" autocomplete="email" aria-describedby="email-hint">
+            <span class="hint" id="email-hint">Must be your <span data-org="at-domain"></span> address.</span>
           </div>
           <div class="field">
             <label for="password">Password <span class="hint">(6+ characters)</span></label>
@@ -307,7 +307,7 @@
           </div>
           <button type="submit" id="submit-btn" class="submit">Create account</button>
           <p class="small">By creating an account, you agree to our <a href="https://get-empath.com/terms-of-service" target="_blank" rel="noopener">Terms of Service</a>.</p>
-          <p class="small">Already have an account? <a href="/login?next=%2Fgofundme">Sign in</a></p>
+          <p class="small">Already have an account? <a data-org="login" href="/login">Sign in</a></p>
         </form>
       </div>
 
@@ -346,13 +346,31 @@
     const auth = firebase.auth();
     const firestore = firebase.firestore();
 
-    // GoFundMe's own sign-up page. The company pays for its seats through a
-    // FastSpring quote, so there is no checkout here: a verified
-    // @gofundme.com account takes a seat (joinOrg) and goes to download.
-    // The domain check on this page is only a convenience; joinOrg enforces
-    // it, and only for a verified address.
-    const ORG_ID = 'gofundme';
-    const DOMAIN = 'gofundme.com';
+    // A company's own sign-up page, one per org, picked by the path that
+    // vercel.json rewrites here (the org's joinPath, which the verification
+    // link also returns to). The company pays for its seats through a
+    // FastSpring quote, so there is no checkout here: a verified work
+    // account takes a seat (joinOrg) and goes to download. The domain check
+    // on this page is only a convenience; joinOrg enforces it, and only for
+    // a verified address.
+    const ORGS = {
+      '/gofundme': { orgId: 'gofundme', name: 'GoFundMe', domain: 'gofundme.com' },
+      '/tennischannel': { orgId: 'tennischannel', name: 'Tennis Channel', domain: 'tennischannel.com' }
+    };
+    const ORG_PATH = window.location.pathname.replace(/\/+$/, '');
+    const ORG = ORGS[ORG_PATH];
+    if (!ORG) window.location.replace('/signup');
+    const ORG_ID = ORG?.orgId;
+    const DOMAIN = ORG?.domain;
+    const LOGIN_URL = `/login?next=${encodeURIComponent(ORG_PATH)}`;
+
+    if (ORG) {
+      document.title = `Empath for ${ORG.name}`;
+      document.querySelectorAll('[data-org="name"]').forEach((el) => { el.textContent = ORG.name; });
+      document.querySelectorAll('[data-org="at-domain"]').forEach((el) => { el.textContent = `@${DOMAIN}`; });
+      document.querySelectorAll('[data-org="login"]').forEach((el) => { el.href = LOGIN_URL; });
+      document.getElementById('email').placeholder = `you@${DOMAIN}`;
+    }
     const FUNCTIONS_URL = 'https://us-central1-get-empath.cloudfunctions.net';
     const DOWNLOAD_URL = 'https://get-empath.com/download';
     const VERIFY_POLL_MS = 5000;
@@ -531,7 +549,7 @@
         signingUp = false;
         console.error('Signup error:', error);
         const messages = {
-          'auth/email-already-in-use': 'This email already has an account. <a href="/login?next=%2Fgofundme">Sign in instead</a>',
+          'auth/email-already-in-use': `This email already has an account. <a href="${LOGIN_URL}">Sign in instead</a>`,
           'auth/weak-password': 'Password should be at least 6 characters long.',
           'auth/invalid-email': 'Please enter a valid email address.',
           'auth/network-request-failed': 'Network error. Please check your connection and try again.'

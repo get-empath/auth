@@ -860,8 +860,10 @@
       document.getElementById('form-subtitle').hidden = true;
       document.getElementById('form-heading').textContent = 'You’re in.';
       const plan = result.planLabel || `${result.orgName || 'your company'}’s Empath plan`;
-      document.getElementById('invite-done-text').textContent =
-        `Your account is on the ${plan}. Download Empath and sign in with this account to start.`;
+      document.getElementById('invite-done-text').textContent = result.personalPlan
+        // Their own subscription stays primary, so no company seat was used
+        ? `You already have Empath through your own subscription, so you don't need a seat on the ${plan}. Keep using Empath as you do now.`
+        : `Your account is on the ${plan}. Download Empath and sign in with this account to start.`;
       document.getElementById('invite-done').hidden = false;
     }
 

@@ -21,7 +21,8 @@ function gofundme(overrides = {}) {
     ],
     invites: [
       { inviteId: 'inv-1', email: 'cy@gofundme.com', status: 'pending', expiresAt: '2026-11-29T00:00:00.000Z', acceptedBy: null },
-      { inviteId: 'inv-2', email: 'dee@gofundme.com', status: 'revoked', expiresAt: null, acceptedBy: null }
+      { inviteId: 'inv-2', email: 'dee@gofundme.com', status: 'revoked', expiresAt: null, acceptedBy: null },
+      { inviteId: 'inv-3', email: 'eli@gofundme.com', status: 'accepted', seatless: true, expiresAt: null, acceptedBy: 'uid-e' }
     ],
     ...overrides
   };
@@ -78,6 +79,7 @@ test.describe('/admin', () => {
     await expect(page.locator('#invites-body tr').first()).toContainText('pending');
     // Only a pending invite can be revoked; a revoked one offers nothing
     await expect(page.locator('#invites-body tr').nth(1).getByRole('button')).toHaveCount(0);
+    await expect(page.locator('#invites-body tr').nth(2)).toContainText('accepted (own plan, no seat)');
     expect(state.calls.every((c) => c.authorization === 'Bearer id-token-uid-staff')).toBe(true);
   });
 

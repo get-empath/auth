@@ -468,7 +468,7 @@
             return act(() => orgAdmin('revoke', { inviteId: i.inviteId }), () => `Revoked the invite to ${i.email}.`);
           }, true));
         }
-        const status = cell(i.status);
+        const status = cell(i.seatless ? 'accepted (own plan, no seat)' : i.status);
         tr.append(cell(i.email), status, cell(i.status === 'pending' || i.status === 'expired' ? formatDate(i.expiresAt) : '—'), actions);
         return tr;
       }));

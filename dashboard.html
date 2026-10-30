@@ -535,8 +535,17 @@
       $('plan-details').textContent = details;
     }
 
+    // Mirrors the server: someone's own subscription always comes first
+    function hasOwnAccess() {
+      const status = userData.subscriptionStatus;
+      if (status === 'active' || status === 'trial') return true;
+      if (status !== 'canceled' || !userData.deactivationDate) return false;
+      const endsAt = userData.deactivationDate.toDate ? userData.deactivationDate.toDate() : new Date(userData.deactivationDate);
+      return endsAt > new Date();
+    }
+
     function renderSubscription() {
-      if (userData.orgId) {
+      if (userData.orgId && !hasOwnAccess()) {
         renderOrgSubscription();
         return;
       }

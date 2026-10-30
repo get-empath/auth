@@ -148,6 +148,15 @@ test.describe('enterprise sign-up without an invite is closed', () => {
   });
 });
 
+test.describe('invitees who already pay for Empath', () => {
+  test('are told no company seat was needed', async ({ page }) => {
+    await openInvite(page, { acceptInvite: () => ({ ...accepted(), personalPlan: true }) });
+    await expect(page.getByLabel('Email')).toHaveValue(INVITEE.email);
+    await fake.signIn(page, INVITEE);
+    await expect(page.getByText(/already have Empath through your own subscription/)).toBeVisible();
+  });
+});
+
 test.describe('dashboard for org members', () => {
   const MEMBER = { email: 'jordan@example.com', firstName: 'Jordan', orgId: 'gofundme', subscriptionStatus: 'none' };
 
@@ -187,6 +196,13 @@ test.describe('dashboard for org members', () => {
     await signedInWith(page, MEMBER);
     await expect(page.locator('#plan-name')).toHaveText('Company plan');
     await expect(page.locator('#upgrade-btn')).toBeHidden();
+  });
+
+  test('a member with their own active plan sees their own plan, with billing', async ({ page }) => {
+    await signedInWith(page, { ...MEMBER, subscriptionStatus: 'active', plan: 'annual' });
+    await fake.orgSnapshot(page, { name: 'GoFundMe', planLabel: 'GoFundMe Enterprise plan', subscriptionStatus: 'active' });
+    await expect(page.locator('#plan-name')).toHaveText('Pro Annual');
+    await expect(page.getByRole('link', { name: 'Manage billing' })).toBeVisible();
   });
 
   test('a non-member never subscribes to an org', async ({ page }) => {

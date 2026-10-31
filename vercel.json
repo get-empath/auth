@@ -37,6 +37,10 @@
       "destination": "/org.html"
     },
     {
+      "source": "/merino",
+      "destination": "/org.html"
+    },
+    {
       "source": "/admin",
       "destination": "/admin.html"
     }

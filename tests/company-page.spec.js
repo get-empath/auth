@@ -1,7 +1,16 @@
 const { test, expect } = require('@playwright/test');
 const { ORIGIN, openPage, fake } = require('./helpers');
 
-const DOWNLOAD = /^https:\/\/get-empath\.com\/download/;
+const DOWNLOAD_URL = 'https://get-empath.com/download';
+
+// The seat is claimed: a success screen linking to download, not a redirect
+async function expectVerified(page, email) {
+  await expect(page.getByRole('heading', { name: 'You’re verified' })).toBeVisible();
+  await expect(page.locator('#done-email')).toHaveText(email);
+  await expect(page.getByRole('link', { name: 'Download Empath for Mac' })).toHaveAttribute('href', DOWNLOAD_URL);
+  await expect(page.getByRole('heading', { name: 'Setting up your seat…' })).toBeHidden();
+  expect(page.url()).not.toContain('get-empath.com/download');
+}
 const SEATS_FULL = 'Your organization has reached its maximum number of Empath seats. Please reach out to your admin to add more.';
 
 // One page (org.html) serves every company; each entry is one of its paths
@@ -34,6 +43,9 @@ for (const c of COMPANIES) {
       await expect(page.locator('.eyebrow')).toHaveText(`For the ${c.name} team`);
       await expect(page.locator('.lede')).toHaveText(`${c.name} has Empath for its team. Launch any iOS or Android device in seconds, capture flows without effort, and see how competitors' apps work.`);
       await expect(page.locator('.steps li').first()).toHaveText(`1Create your account with your @${c.domain} email`);
+      // The card's text is one flex item, so the domain stays inline
+      const lines = await page.locator('.steps li').first().locator(':scope > *').count();
+      expect(lines).toBe(2);
       await expect(page.getByLabel('Work email')).toHaveAttribute('placeholder', `you@${c.domain}`);
       await expect(page.locator('#email-hint')).toHaveText(`Must be your @${c.domain} address.`);
     });
@@ -55,26 +67,24 @@ for (const c of COMPANIES) {
       expect(page.functionCalls.some((call) => call.name === 'joinOrg')).toBe(false);
     });
 
-    test('once confirmed, it takes the seat and goes straight to download', async ({ page }) => {
+    test('once confirmed, it takes the seat and shows the verified screen', async ({ page }) => {
       await openJoin(page);
       await fillSignup(page, EMAIL);
       await page.getByRole('button', { name: 'Create account' }).click();
       await expect(page.getByRole('heading', { name: 'Check your inbox' })).toBeVisible();
 
       await page.evaluate(() => { window.__fake.user.emailVerified = true; });
-      const download = page.waitForRequest(DOWNLOAD);
       await page.getByRole('button', { name: "I've confirmed it" }).click();
-      await download;
+      await expectVerified(page, EMAIL);
 
       const join = page.functionCalls.find((call) => call.name === 'joinOrg');
       expect(join).toMatchObject({ data: { orgId: c.orgId }, authorization: 'Bearer id-token-uid-new' });
     });
 
-    test('arriving from the verification link (already verified) goes straight to download', async ({ page }) => {
+    test('arriving from the verification link (already verified) shows the verified screen', async ({ page }) => {
       await openJoin(page);
-      const download = page.waitForRequest(DOWNLOAD);
       await fake.signIn(page, ALEX);
-      await download;
+      await expectVerified(page, EMAIL);
     });
 
     test('picks up confirmation from another tab on its own', async ({ page }) => {
@@ -83,10 +93,9 @@ for (const c of COMPANIES) {
       await fake.signIn(page, { ...ALEX, emailVerified: false });
       await expect(page.getByRole('heading', { name: 'Check your inbox' })).toBeVisible();
 
-      const download = page.waitForRequest(DOWNLOAD);
       await page.evaluate(() => { window.__fake.user.emailVerified = true; });
       await page.clock.runFor(5100);
-      await download;
+      await expectVerified(page, EMAIL);
     });
 
     test('a full organization shows the admin message', async ({ page }) => {
@@ -129,15 +138,14 @@ for (const c of COMPANIES) {
       await expect(page.getByRole('link', { name: 'Sign in instead' })).toHaveAttribute('href', LOGIN);
     });
 
-    test('the confirmation link confirms the address and claims the seat in one click', async ({ page }) => {
+    test('the confirmation link confirms the address and claims the seat in one click, then shows the verified screen', async ({ page }) => {
       await openJoin(page, {}, '?mode=verifyEmail&oobCode=code-123');
       await fake.signIn(page, { ...ALEX, emailVerified: false });
       expect(await fake.calls(page)).toContainEqual(['applyActionCode', 'code-123']);
       await expect(page).toHaveURL(`${ORIGIN}${c.path}`);
 
-      const download = page.waitForRequest(DOWNLOAD);
       await page.evaluate(() => window.__fake.confirmCode());
-      await download;
+      await expectVerified(page, EMAIL);
       expect(page.functionCalls.find((call) => call.name === 'joinOrg')).toMatchObject({ data: { orgId: c.orgId } });
     });
 

@@ -217,6 +217,8 @@
     }
 
     .submit:hover { background: var(--ink-800); }
+    a.submit { display: inline-flex; align-items: center; color: #fff; text-decoration: none; }
+    a.submit:hover { color: #fff; }
     .submit:disabled { background: var(--ink-700); cursor: not-allowed; }
 
     .secondary {
@@ -271,7 +273,7 @@
       <h1 id="hero-heading">Your Empath seat is ready.</h1>
       <p class="lede"><span data-org="name"></span> has Empath for its team. Launch any iOS or Android device in seconds, capture flows without effort, and see how competitors' apps work.</p>
       <ol class="steps">
-        <li><strong>1</strong>Create your account with your <span data-org="at-domain"></span> email</li>
+        <li><strong>1</strong><span>Create your account with your <span data-org="at-domain"></span> email</span></li>
         <li><strong>2</strong>Confirm it from your inbox</li>
         <li><strong>3</strong>Download Empath and sign in</li>
       </ol>
@@ -318,6 +320,15 @@
         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px">
           <button type="button" class="submit" id="verified-btn">I've confirmed it</button>
           <button type="button" class="secondary" id="resend-btn">Resend the link</button>
+        </div>
+      </div>
+
+      <!-- Confirmed, with a seat -->
+      <div id="done-panel" hidden>
+        <h2>You’re verified</h2>
+        <p>Your <span data-org="name"></span> seat on Empath is ready. Download Empath to get started on your Mac, then sign in with <strong id="done-email"></strong>.</p>
+        <div style="margin-top: 16px">
+          <a class="submit download-link" id="download-link" href="https://get-empath.com/download">Download Empath for Mac</a>
         </div>
       </div>
 
@@ -372,7 +383,6 @@
       document.getElementById('email').placeholder = `you@${DOMAIN}`;
     }
     const FUNCTIONS_URL = 'https://us-central1-get-empath.cloudfunctions.net';
-    const DOWNLOAD_URL = 'https://get-empath.com/download';
     const VERIFY_POLL_MS = 5000;
 
     const $ = (id) => document.getElementById(id);
@@ -398,7 +408,7 @@
     }
 
     function showPanel(name) {
-      ['signup', 'verify', 'working'].forEach((p) => { $(`${p}-panel`).hidden = p !== name; });
+      ['signup', 'verify', 'working', 'done'].forEach((p) => { $(`${p}-panel`).hidden = p !== name; });
       if (name !== 'verify') clearInterval(pollTimer);
     }
 
@@ -500,7 +510,8 @@
       try {
         // Force a fresh token so it carries email_verified: true
         await callFunction('joinOrg', { orgId: ORG_ID }, await current.getIdToken(true));
-        window.location.href = DOWNLOAD_URL;
+        $('done-email').textContent = current.email;
+        showPanel('done');
       } catch (error) {
         console.error('joinOrg failed:', error);
         $('working-panel').hidden = true;

@@ -41,6 +41,10 @@
       "destination": "/org.html"
     },
     {
+      "source": "/ymail",
+      "destination": "/org.html"
+    },
+    {
       "source": "/admin",
       "destination": "/admin.html"
     }

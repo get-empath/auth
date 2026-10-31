@@ -20,7 +20,8 @@ const SEATS_FULL = 'Your organization has reached its maximum number of Empath s
 const COMPANIES = [
   { path: '/gofundme', orgId: 'gofundme', name: 'GoFundMe', domain: 'gofundme.com' },
   { path: '/tennischannel', orgId: 'tennischannel', name: 'Tennis Channel', domain: 'tennischannel.com' },
-  { path: '/merino', orgId: 'merino', name: 'Merino', domain: 'merino-ai.com' }
+  { path: '/merino', orgId: 'merino', name: 'Merino', domain: 'merino-ai.com' },
+  { path: '/ymail', orgId: 'ymail', name: 'Ymail Test', domain: 'ymail.com' }
 ];
 
 async function fillSignup(page, email) {

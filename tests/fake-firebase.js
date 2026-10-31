@@ -58,6 +58,14 @@
       fake.signedIn({ uid: 'uid-new', email, displayName: null });
       return { user: fake.user };
     },
+    // Settled by the test: fake.confirmCode() or fake.rejectCode(code)
+    applyActionCode(code) {
+      fake.calls.push(['applyActionCode', code]);
+      return new Promise((resolve, reject) => {
+        fake.confirmCode = () => { if (fake.user) fake.user.emailVerified = true; resolve(); };
+        fake.rejectCode = (errorCode) => reject({ code: errorCode, message: errorCode });
+      });
+    },
     async signOut() {
       logSignOutStep('signOut');
       fake.signedOut();

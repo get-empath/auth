@@ -23,8 +23,8 @@ for (const c of COMPANIES) {
   const LOGIN = `/login?next=${encodeURIComponent(c.path)}`;
   const ALEX = { uid: 'uid-alex', email: EMAIL, displayName: 'Alex Kim', emailVerified: true };
   const joined = () => ({ orgId: c.orgId, orgName: c.name, planLabel: `${c.name} Enterprise plan`, alreadyMember: false });
-  const openJoin = (page, functions = {}) =>
-    openPage(page, c.path, { functions: { joinOrg: joined, resendJoinVerification: () => ({ sent: true }), ...functions } });
+  const openJoin = (page, functions = {}, query = '') =>
+    openPage(page, c.path + query, { functions: { joinOrg: joined, resendJoinVerification: () => ({ sent: true }), ...functions } });
 
   test.describe(c.path, () => {
     test("shows this company's name and domain throughout", async ({ page }) => {
@@ -127,6 +127,36 @@ for (const c of COMPANIES) {
       await fillSignup(page, EMAIL);
       await page.getByRole('button', { name: 'Create account' }).click();
       await expect(page.getByRole('link', { name: 'Sign in instead' })).toHaveAttribute('href', LOGIN);
+    });
+
+    test('the confirmation link confirms the address and claims the seat in one click', async ({ page }) => {
+      await openJoin(page, {}, '?mode=verifyEmail&oobCode=code-123');
+      await fake.signIn(page, { ...ALEX, emailVerified: false });
+      expect(await fake.calls(page)).toContainEqual(['applyActionCode', 'code-123']);
+      await expect(page).toHaveURL(`${ORIGIN}${c.path}`);
+
+      const download = page.waitForRequest(DOWNLOAD);
+      await page.evaluate(() => window.__fake.confirmCode());
+      await download;
+      expect(page.functionCalls.find((call) => call.name === 'joinOrg')).toMatchObject({ data: { orgId: c.orgId } });
+    });
+
+    test('the confirmation link opened signed out confirms, then asks to sign in', async ({ page }) => {
+      await openJoin(page, {}, '?mode=verifyEmail&oobCode=code-123');
+      await page.evaluate(() => window.__fake.confirmCode());
+      await fake.signOut(page);
+      await expect(page.getByRole('alert')).toContainText('Your email is confirmed.');
+      await expect(page.getByRole('alert').getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', LOGIN);
+      expect(page.functionCalls.some((call) => call.name === 'joinOrg')).toBe(false);
+    });
+
+    test('an expired or used confirmation link says so and offers a new one', async ({ page }) => {
+      await openJoin(page, {}, '?mode=verifyEmail&oobCode=used');
+      await fake.signIn(page, { ...ALEX, emailVerified: false });
+      await page.evaluate(() => window.__fake.rejectCode('auth/invalid-action-code'));
+      await expect(page.getByRole('heading', { name: 'Check your inbox' })).toBeVisible();
+      await expect(page.getByRole('alert')).toContainText('That confirmation link has expired or was already used.');
+      expect(page.functionCalls.some((call) => call.name === 'joinOrg')).toBe(false);
     });
 
     test(`sign-in links come back to ${c.path}, and login allows it`, async ({ page }) => {

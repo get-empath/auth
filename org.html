@@ -439,9 +439,35 @@
       $('switch-account').addEventListener('click', signOutAndRestart);
     }
 
+    // The confirmation email links here with ?mode=verifyEmail&oobCode=…,
+    // and the page applies the code itself, so that one click confirms the
+    // address (Firebase's own action page would need a second).
+    const params = new URLSearchParams(window.location.search);
+    const actionCode = params.get('mode') === 'verifyEmail' ? params.get('oobCode') : null;
+    let confirmation = actionCode ? confirmEmail(actionCode) : null;
+
+    async function confirmEmail(code) {
+      // Keep the one-time code out of the address bar and history
+      history.replaceState(null, '', ORG_PATH);
+      try {
+        await auth.applyActionCode(code);
+        return 'confirmed';
+      } catch (error) {
+        console.warn('Could not apply the confirmation link:', error.code || error);
+        return 'failed';
+      }
+    }
+
+    // The link's outcome, reported once
+    async function takeConfirmation() {
+      const pending = confirmation;
+      confirmation = null;
+      return pending ? pending : null;
+    }
+
     // Everything after sign-in goes through here: from the form, from
-    // /login, and from the verification link landing back on this page.
-    async function proceed(user) {
+    // /login, and from the confirmation link landing back on this page.
+    async function proceed(user, linkResult = null) {
       if (claiming) return;
 
       if (!isWorkEmail(user.email)) {
@@ -457,6 +483,9 @@
       if (!current.emailVerified) {
         $('verify-email').textContent = current.email;
         showPanel('verify');
+        if (linkResult === 'failed') {
+          showMessage('That confirmation link has expired or was already used. Resend the link for a new one.');
+        }
         clearInterval(pollTimer);
         pollTimer = setInterval(async () => {
           await current.reload();
@@ -583,8 +612,15 @@
       }
     });
 
-    auth.onAuthStateChanged((user) => {
-      if (user && !signingUp) proceed(user);
+    auth.onAuthStateChanged(async (user) => {
+      const linkResult = await takeConfirmation();
+      if (user) {
+        if (!signingUp) proceed(user, linkResult);
+      } else if (linkResult === 'confirmed') {
+        showMessage(`Your email is confirmed. <a href="${LOGIN_URL}">Sign in</a> to set up your seat.`, 'info');
+      } else if (linkResult === 'failed') {
+        showMessage(`That confirmation link has expired or was already used. <a href="${LOGIN_URL}">Sign in</a> and we’ll send you a new one.`);
+      }
     });
   </script>
 </body>

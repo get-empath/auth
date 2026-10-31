@@ -5,8 +5,11 @@ const DOWNLOAD_URL = 'https://get-empath.com/download';
 
 // The seat is claimed: a success screen linking to download, not a redirect
 async function expectVerified(page, email) {
-  await expect(page.getByRole('heading', { name: 'You’re verified' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^You’re in/ })).toBeVisible();
   await expect(page.locator('#done-email')).toHaveText(email);
+  await expect(page.locator('#done-pill')).toHaveText('Seat active');
+  // The confirmed screen replaces the sign-up page
+  await expect(page.getByRole('heading', { name: 'Your Empath seat is ready.' })).toBeHidden();
   await expect(page.getByRole('link', { name: 'Download Empath for Mac' })).toHaveAttribute('href', DOWNLOAD_URL);
   await expect(page.getByRole('heading', { name: 'Setting up your seat…' })).toBeHidden();
   expect(page.url()).not.toContain('get-empath.com/download');
@@ -170,7 +173,8 @@ for (const c of COMPANIES) {
     test(`sign-in links come back to ${c.path}, and login allows it`, async ({ page }) => {
       await openJoin(page);
       const signInLinks = page.getByRole('link', { name: 'Sign in', exact: true });
-      await expect(signInLinks).toHaveCount(2);
+      // Just the header's: the form has no "Already have an account?" line
+      await expect(signInLinks).toHaveCount(1);
       for (const link of await signInLinks.all()) await expect(link).toHaveAttribute('href', LOGIN);
 
       await openPage(page, LOGIN);
